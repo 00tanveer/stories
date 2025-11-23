@@ -1,7 +1,8 @@
 __pycache__/
 stories_env/
 .DS_Store
-.env
+.env.development
+.env.development
 node_modules/
 data/
 app/language_models/question_detector/models/

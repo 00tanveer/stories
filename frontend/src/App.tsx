@@ -9,14 +9,15 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   
   // Podcastplayer state to pass as props
+  type SeekTime = { time: number; token: number };
   const [currentEpisode, setCurrentEpisode] = useState<QAResult | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [seekTime, setSeekTime] = useState<number | null>(null);
+  const [seekTime, setSeekTime] = useState<SeekTime | null>(null);
 
   const handleSearch = async (query: string) => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8000/search", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/search`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query }),
@@ -34,29 +35,32 @@ const App: React.FC = () => {
   const handlePlayClick = (episode: QAResult) => {
     console.log(episode.start)
     setCurrentEpisode(episode);
-    setSeekTime({ time: episode.start, token: Date.now() });
+    // episode.start is optional on QAResult, ensure we pass a number
+    setSeekTime({ time: episode.start ?? 0, token: Date.now() });
     setIsPlaying(true);
   };
 
   
 
   return (
-    <div className="w-screen h-screen flex flex-col items-center justify-start py-5 bg-gray-100">
-      <h2 className="title text-3xl font-bold mb-6 text-black">🎯 Search for wisdom, across thousands of conversations</h2>
+    <div className="w-screen h-screen flex flex-col items-center justify-start py-5 px-5 bg-gray-100">
+      <h1 className="title text-3xl font-bold mb-6 text-black">Stories</h1>
+      <h2 className="text-xl font-bold mb-6 mx-2 text-center text-black">🎯 Search for wisdom, across thousands of conversations</h2>
       <SearchBar onSearch={handleSearch} />
       {loading ? (
         <p className="text-gray-600 mt-6">Searching...</p>
       ) : (
         <ResultsList results={results} onPlayClick={handlePlayClick}/>
       )}
-      <PodcastPlayer 
+      <PodcastPlayer
         episode={currentEpisode}
         seekTime={seekTime}
         isPlaying={isPlaying}
         onPlayStateChange={setIsPlaying}
-        onSeekChange={setSeekTime}
+        // PodcastPlayer expects onSeekChange: (ms: number) => void
+        onSeekChange={(ms: number) => setSeekTime({ time: ms, token: Date.now() })}
         onEnded={() => setIsPlaying(false)}
-        />
+      />
     </div>
   );
 };

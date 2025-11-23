@@ -13,17 +13,23 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex justify-center mb-8">
+    <form
+      onSubmit={handleSubmit}
+      className="flex max-sm:flex-col max-sm:w-80 w-150 gap-3 mb-6"
+    >
       <input
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Ask a question..."
-        className="w-150 mx-3 p-3 rounded-l-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+        className="flex-1 px-4 py-3 border border-gray-300 rounded-lg 
+                  focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
       />
+
       <button
         type="submit"
-        className="bg-blue-600 text-white px-6 rounded-r-lg hover:bg-blue-700 transition"
+        className="bg-blue-600 whitespace-nowrap text-white px-5 py-3 rounded-lg 
+                  hover:bg-blue-700 transition"
       >
         Search
       </button>
