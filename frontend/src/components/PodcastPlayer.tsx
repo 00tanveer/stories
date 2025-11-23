@@ -86,8 +86,8 @@ const PodcastPlayer: React.FC<PodcastPlayerProps> = ({
     const handleLoaded = () => {
       setDuration(audio.duration || episode?.duration || 0);
 
-      // 🟢 Auto-seek AFTER load
-      if (seekTime.time != null) {
+      // 🟢 Auto-seek AFTER load (guard for null seekTime)
+      if (seekTime?.time != null) {
         audio.currentTime = seekTime.time / 1000;
       }
       // 🟢 Auto-play AFTER the new source is ready
@@ -168,12 +168,12 @@ const PodcastPlayer: React.FC<PodcastPlayerProps> = ({
           <img
             src={episode.episode_image}
             alt={episode.title}
-            className="w-20 h-20 rounded-lg object-cover mr-6"
+            className="w-20 h-20 max-sm:w-10 max-sm:h-10 rounded-lg object-cover mr-6"
           />
         )}
 
         <div className="flex flex-col flex-1">
-          <h2 className="text-lg font-semibold truncate">{episode.title}</h2>
+          <h2 className="text-lg font-semibold max-sm:text-sm">{episode.title}</h2>
           <p className="text-xs text-neutral-400 mb-2">
             {Math.round(episode.duration / 60)} min
           </p>

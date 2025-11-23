@@ -4,10 +4,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: stories-backend-dev
+    container_name: stories-backend
     restart: always
     env_file:
-      - .env.development
+      - .env.production
     environment:
       CHROMA_HOST: chroma
       CHROMA_PORT: 8001
@@ -28,23 +28,21 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.dev # Dev dockerfile with hot reload
-    container_name: stories-frontend-dev
+      dockerfile: Dockerfile
+    container_name: stories-frontend
     restart: always
     env_file:
-      - .env.development
+      - .env.production
     ports:
-      - "5173:5173"  # Vite/React dev server port
-    volumes:
-      - ./frontend:/app  # Mount for hot reload
-      - /app/node_modules  # Don't override node_modules
-    command: npm run dev
+      - "3000:80"
+    depends_on:
+      - backend
   db:
     image: postgres:17
-    container_name: postgres-dev
+    container_name: postgres
     restart: always
     env_file:
-      - .env.development  # <-- dynamic! This changes between dev vs prod
+      - .env.production  # <-- dynamic! This changes between dev vs prod
     ports:
       - "5432:5432"
     volumes:
