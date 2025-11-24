@@ -2,8 +2,9 @@
 
 ## pre-v0.0.alpha-1 
 ---- Deployment ----
-- [ ] Set up Github Actions workflow for React app in dev and prod environments
+- [ ] Set up automated deployments for all services in dev and prod environments
 - [ ] Document workflows for dev and prod environments (run commands, env variable loading, docker builds, GH action workflow, build commands in prod server)
+- [ ] Set up docker workflow for all services in dev DONE
 - [ ] Containerize services in prod and run DONE
 - [ ] Set up nginx correctly to reverse proxy requests to react app and FastAPI server correctly DONE
 - [ ] Containerize Python server, React app and test locally

@@ -30,6 +30,9 @@ class QueryRequest(BaseModel):
 def root():
     return {"message": "Stories Indexer API is live 🚀"}
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
 @app.post("/search")
 def search(request: QueryRequest):
