@@ -14,6 +14,6 @@ chroma_db/
 *.duckdb
 *.sqlite
 *chroma.sqlite3
-hot_commands.txt
+hot_commands.bash
 questions.txt
 search_results/
