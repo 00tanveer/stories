@@ -7,4 +7,4 @@ assemblyai
 sqlalchemy
 alembic
 asyncpg
-flagembedding
+chromadb
