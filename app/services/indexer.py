@@ -9,6 +9,7 @@ from app.db.data_models.podcast import Podcast
 from chromadb import Documents, EmbeddingFunction, Embeddings
 from sqlalchemy import select, and_
 from tqdm import tqdm
+import os
 
 
 class Indexer:
@@ -20,11 +21,13 @@ class Indexer:
         use_remote: Whether to use remote Ollama host.
     '''
     # Indexer class attributes
-    CHROMA_HOST = 'localhost'
     EMBEDDING_MODEL = 'BAAI/bge-base-en-v1.5'
     
     def __init__(self):
-        self.chroma_client = chromadb.HttpClient(host=self.CHROMA_HOST, port=8001)
+        print(os.getenv("CHROMA_HOST")) # The print output is chroma 
+        print(os.getenv("CHROMA_PORT")) # The print output is 8001
+
+        self.chroma_client = chromadb.HttpClient(host=os.getenv("CHROMA_HOST"), port=os.getenv("CHROMA_PORT"))
         self.embeddings_generator = infinity_embeddings(self.EMBEDDING_MODEL)
         self.chroma_coll_config = {
             "hnsw": {
