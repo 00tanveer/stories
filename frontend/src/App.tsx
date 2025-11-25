@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import SearchBar from "./components/SearchBar";
 import ResultsList from "./components/ResultsList";
 import PodcastPlayer from "./components/PodcastPlayer";
 import type { QAResult } from "./components/types";
+import { usePostHog } from '@posthog/react'
 
 const App: React.FC = () => {
+  const posthog = usePostHog()
   const [results, setResults] = useState<QAResult[]>([]);
   const [loading, setLoading] = useState(false);
   
@@ -14,7 +16,16 @@ const App: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [seekTime, setSeekTime] = useState<SeekTime | null>(null);
 
+  useEffect(() => {
+        if (posthog) {
+            const sessionId = posthog.get_session_id()
+            
+            // Set it as a default header for all API requests
+            axios.defaults.headers.common['X-POSTHOG-SESSION-ID'] = sessionId
+        }
+    }, [posthog])
   const handleSearch = async (query: string) => {
+    posthog?.capture('clicked_search')
     setLoading(true);
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/search`, {
