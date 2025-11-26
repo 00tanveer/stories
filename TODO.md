@@ -2,8 +2,8 @@
 
 ## pre-v0.0.alpha-1 
 ---- Observability ----
-- [ ] Set up Posthog across all services to track errors, monitor performance and trigger error alerts
 - [ ] Set up Locust for load testing
+- [ ] Set up Posthog across all services to track errors, monitor performance and trigger error alerts DONE
 ---- Deployment ----
 - [ ] Set up automated deployments for all services in dev and prod environments
 - [ ] Document workflows for dev and prod environments (run commands, env variable loading, docker builds, GH action workflow, build commands in prod server)
@@ -12,7 +12,8 @@
 - [ ] Set up nginx correctly to reverse proxy requests to react app and FastAPI server correctly DONE
 - [ ] Containerize Python server, React app and test locally DONE
 ---- Frontend ----
-- [ ] Make search page mobile responsive 
+- [ ] Fix UI to make app shareable with users 
+- [ ] Make search page mobile responsive DONE
 - [ ] Make the Podcast player functional DONE
 - [ ] Enrich QA cards with episode data DONE
 

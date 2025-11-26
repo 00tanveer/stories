@@ -9,17 +9,61 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+    # 1. Checkout repository
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Deploy to Vultr
+    # 2. Log in to GHCR
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
+    
+     # 3. Build & Push BACKEND image
+      - name: Build & push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          platforms: linux/amd64
+          tags: ghcr.io/00tanveer/stories-backend:latest
+
+      # 4. Build & Push FRONTEND image
+      - name: Build & push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          platforms: linux/amd64
+          tags: ghcr.io/00tanveer/stories-frontend:latest
+
+      # 5. SSH into Vultr & deploy containers
+      - name: Pull & restart containers on Vultr
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.HOST }}
+          host: ${{ secrets.VULTR_HOST }}
           username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.KEY }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.PORT || '22' }}
           script: |
-            cd stories
+            cd /opt/stories/
             git pull origin main
-            docker compose -f docker-compose.prod.yml up -d --build
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d
+      # 6 Notify on Discord server about the deployment status
+      - name: Notify Discord on success
+        if: success()  # only runs if every step succeeded
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d "{\"content\": \"🚀 Deployment to Vultr successful for commit: $GITHUB_SHA\"}" \
+               ${{ secrets.DISCORD_WEBHOOK_URL }}
+      - name: Notify Discord on failure
+        if: failure()
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d "{\"content\": \"❌ Deployment FAILED on commit: $GITHUB_SHA\"}" \
+               ${{ secrets.DISCORD_WEBHOOK_URL }}
