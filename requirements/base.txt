@@ -8,3 +8,4 @@ sqlalchemy
 alembic
 asyncpg
 chromadb
+posthog

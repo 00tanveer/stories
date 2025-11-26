@@ -1,25 +1,39 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import SearchBar from "./components/SearchBar";
 import ResultsList from "./components/ResultsList";
 import PodcastPlayer from "./components/PodcastPlayer";
 import type { QAResult } from "./components/types";
+import { usePostHog } from '@posthog/react'
 
 const App: React.FC = () => {
+  const posthog = usePostHog()
   const [results, setResults] = useState<QAResult[]>([]);
   const [loading, setLoading] = useState(false);
   
   // Podcastplayer state to pass as props
+  const [sessionId, setSessionId] = useState<string | null>(null)
   type SeekTime = { time: number; token: number };
   const [currentEpisode, setCurrentEpisode] = useState<QAResult | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [seekTime, setSeekTime] = useState<SeekTime | null>(null);
 
+  useEffect(() => {
+        if (posthog) {
+            const id = posthog.get_session_id()
+            setSessionId(id)
+        }
+    }, [posthog])
   const handleSearch = async (query: string) => {
+    posthog?.capture('clicked_search')
     setLoading(true);
     try {
+      const headers: HeadersInit = { "Content-Type": "application/json" };
+      if (sessionId) {
+        headers['X-POSTHOG-SESSION-ID'] = sessionId;
+      }
       const res = await fetch(`${import.meta.env.VITE_API_URL}/search`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ query }),
       });
       const data = await res.json();
