@@ -11,6 +11,7 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   
   // Podcastplayer state to pass as props
+  const [sessionId, setSessionId] = useState<string | null>(null)
   type SeekTime = { time: number; token: number };
   const [currentEpisode, setCurrentEpisode] = useState<QAResult | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -18,19 +19,21 @@ const App: React.FC = () => {
 
   useEffect(() => {
         if (posthog) {
-            const sessionId = posthog.get_session_id()
-            
-            // Set it as a default header for all API requests
-            axios.defaults.headers.common['X-POSTHOG-SESSION-ID'] = sessionId
+            const id = posthog.get_session_id()
+            setSessionId(id)
         }
     }, [posthog])
   const handleSearch = async (query: string) => {
     posthog?.capture('clicked_search')
     setLoading(true);
     try {
+      const headers: HeadersInit = { "Content-Type": "application/json" };
+      if (sessionId) {
+        headers['X-POSTHOG-SESSION-ID'] = sessionId;
+      }
       const res = await fetch(`${import.meta.env.VITE_API_URL}/search`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ query }),
       });
       const data = await res.json();
