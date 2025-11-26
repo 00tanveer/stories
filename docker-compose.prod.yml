@@ -1,21 +1,25 @@
 services:
 
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/00tanveer/stories-backend:latest
     container_name: stories-backend
     restart: always
     env_file:
-      - .env.production
+      - /opt/stories/env/.env.backend
     environment:
+      APP_ENV: production
       CHROMA_HOST: chroma
-      CHROMA_PORT: 8001
+      CHROMA_PORT: 8000
     depends_on:
       chroma:
         condition: service_healthy
       db:
         condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "8000:8000"   # expose API if needed
 
@@ -24,7 +28,7 @@ services:
     container_name: stories-chroma
     restart: always
     volumes:
-      - ./chroma:/data     # <-- match official instructions
+      - chroma_data:/data     # <-- match official instructions
     ports:
       - "8001:8000"   # optional, useful for debugging
     healthcheck:
@@ -32,15 +36,12 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 20s
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: ghcr.io/00tanveer/stories-frontend:latest
     container_name: stories-frontend
     restart: always
-    env_file:
-      - .env.production
     ports:
       - "3000:80"
     depends_on:
@@ -50,7 +51,7 @@ services:
     container_name: postgres
     restart: always
     env_file:
-      - .env.production  # <-- dynamic! This changes between dev vs prod
+      - /opt/stories/env/.env.backend  # <-- dynamic! This changes between dev vs prod
     ports:
       - "5432:5432"
     volumes:
@@ -61,5 +62,4 @@ services:
       retries: 5
 volumes:
   pgdata:
-  chroma:
-    driver: local
+  chroma_data:

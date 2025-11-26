@@ -9,11 +9,12 @@ services:
     env_file:
       - .env.development
     environment:
+      APP_ENV: development
       CHROMA_HOST: chroma
       CHROMA_PORT: 8000
     depends_on:
       chroma:
-        condition: service_started
+        condition: service_healthy
       db:
         condition: service_healthy
     ports:
@@ -21,6 +22,17 @@ services:
     volumes:
       - .:/app
       - /app/.venv
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     command: uvicorn app.api.server:app --host 0.0.0.0 --port 8000 --reload
 
   chroma:
@@ -44,13 +56,16 @@ services:
     container_name: stories-frontend-dev
     restart: always
     env_file:
-      - .env.development
+      - ./frontend/.env.development
     ports:
       - "5173:5173"  # Vite/React dev server port
     volumes:
       - ./frontend:/app  # Mount for hot reload
       - /app/node_modules  # Don't override node_modules
     command: npm run dev
+    depends_on:
+      backend:
+        condition: service_healthy
   db:
     image: postgres:17
     container_name: postgres-dev

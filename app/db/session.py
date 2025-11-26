@@ -4,9 +4,11 @@ import os
 from app.db.data_models import *
 from dotenv import load_dotenv
 
-load_dotenv(".env.development")
+ENV = os.getenv("APP_ENV", "development")  # default to development
+
+if ENV == "development":
+    load_dotenv(".env.development")
 db_url = os.getenv("DATABASE_URL")
-print(db_url)
 engine = create_async_engine(db_url, echo=False, future=True)
 AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
