@@ -91,7 +91,13 @@ def search(request: QueryRequest):
         return {"query": request.query, "results": results}
     except Exception as e:
         print(e)
-        posthog.capture_exception(error, 'user_distinct_id', properties=additional_properties)
+        posthog.capture_exception(
+            e, 
+            'user_distinct_id', 
+            properties={
+                "path": request.url.path,
+                "method": request.method,
+            })
         raise HTTPException(status_code=500, detail=str(e))
 
 
