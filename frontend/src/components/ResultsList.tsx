@@ -1,7 +1,6 @@
-import QAItem from "./QAItem";
-import type {QAResult} from "./types.tsx";
-
-
+import QACard from "./QACard.tsx";
+import type { QAResult } from "./types.tsx";
+import styles from "./ResultsList.module.css";
 
 interface ResultsListProps {
   results: QAResult[];
@@ -9,15 +8,14 @@ interface ResultsListProps {
 }
 
 const ResultsList: React.FC<ResultsListProps> = ({ results, onPlayClick }) => {
-  // console.log(results)
   return (
-    <div className="w-full max-w-3xl mt-8">
+    <div className={styles.resultsList}>
       {results.map((r, i) => (
-        <QAItem
+        <QACard
           key={i}
-          result={r}      
-          onPlayClick={onPlayClick}  
-          />
+          result={r}
+          onPlayClick={onPlayClick}
+        />
       ))}
     </div>
   );

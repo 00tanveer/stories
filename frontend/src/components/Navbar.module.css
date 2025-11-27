@@ -1,0 +1,23 @@
+.navbar {
+  height: 5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-4);
+  background: black;
+  border-bottom: 1px solid var(--color-muted);
+}
+
+/* Example: override for a special button */
+.howToBtn {
+  background: var(--color-surface);
+  color: var(--color-text);
+  margin-left: var(--space-5);
+  margin-right: var(--space-5);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.howToBtn:hover {
+  background: var(--color-bg);
+  color: var(--color-text);
+  cursor: pointer;
+}

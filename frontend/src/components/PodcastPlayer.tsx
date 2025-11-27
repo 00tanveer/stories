@@ -1,9 +1,6 @@
-import React, {
-  useRef,
-  useState,
-  useEffect,
-} from "react";
+import React, { useRef, useState, useEffect } from "react";
 import type { QAResult } from "./types";
+import styles from "./PodcastPlayer.module.css";
 
 export interface PodcastPlayerHandle {
   seekTo: (seconds: number) => void;
@@ -161,67 +158,64 @@ const PodcastPlayer: React.FC<PodcastPlayerProps> = ({
     onSeekChange(newSeconds * 1000);
   };
 
+
   if (!episode) return null;
-    return (
-      <div className="fixed bottom-0 left-0 w-full bg-neutral-900 text-white h-[150px] flex items-center px-6 shadow-2xl">
-        {episode.episode_image && (
-          <img
-            src={episode.episode_image}
-            alt={episode.title}
-            className="w-20 h-20 max-sm:w-10 max-sm:h-10 rounded-lg object-cover mr-6"
+  return (
+    <div className={styles.player}>
+      {episode.episode_image && (
+        <img
+          src={episode.episode_image}
+          alt={episode.title}
+          className={styles.episodeImage}
+        />
+      )}
+
+      <div className={styles.info}>
+        <h2 className={styles.title}>{episode.title}</h2>
+        <p className={styles.duration}>
+          {Math.round(episode.duration / 60)} min
+        </p>
+
+        {/* Custom progress bar */}
+        <div className={styles.progressRow}>
+          <span className={styles.time}>{formatTime(currentTime)}</span>
+          <input
+            type="range"
+            value={progress}
+            onChange={handleSeek}
+            className={styles.progressBar}
           />
-        )}
-
-        <div className="flex flex-col flex-1">
-          <h2 className="text-lg font-semibold max-sm:text-sm">{episode.title}</h2>
-          <p className="text-xs text-neutral-400 mb-2">
-            {Math.round(episode.duration / 60)} min
-          </p>
-
-          {/* Custom progress bar */}
-          <div className="flex items-center mb-3">
-            <span className="text-xs text-neutral-400 w-10 text-right mr-3">
-              {formatTime(currentTime)}
-            </span>
-            <input
-              type="range"
-              value={progress}
-              onChange={handleSeek}
-              className="flex-1 h-1 bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-red-500"
-            />
-            <span className="text-xs text-neutral-400 w-10 ml-3">
-              {formatTime(duration)}
-            </span>
-          </div>
-
-          {/* Controls */}
-          <div className="flex justify-center items-center space-x-8 mt-2">
-            <button
-              onClick={() => skip(-10)}
-              className="text-white hover:text-red-400 transition"
-            >
-              ⏪ 10s
-            </button>
-
-            <button
-              onClick={togglePlay}
-              className="bg-red-500 hover:bg-red-600 rounded-full w-10 h-10 flex items-center justify-center text-white text-lg"
-            >
-              {isPlaying ? "❚❚" : "▶"}
-            </button>
-
-            <button
-              onClick={() => skip(10)}
-              className="text-white hover:text-red-400 transition"
-            >
-              10s ⏩
-            </button>
-          </div>
+          <span className={`${styles.time} ${styles.timeEnd}`}>{formatTime(duration)}</span>
         </div>
 
-        <audio ref={audioRef} src={episode.enclosure_url} preload="metadata" />
+        {/* Controls */}
+        <div className={styles.controls}>
+          <button
+            onClick={() => skip(-10)}
+            className={styles.controlBtn}
+          >
+            ⏪ 10s
+          </button>
+
+          <button
+            onClick={togglePlay}
+            className={styles.playBtn}
+          >
+            {isPlaying ? "❚❚" : "▶"}
+          </button>
+
+          <button
+            onClick={() => skip(10)}
+            className={styles.controlBtn}
+          >
+            10s ⏩
+          </button>
+        </div>
       </div>
-    );
-  }
+
+      <audio ref={audioRef} src={episode.enclosure_url} preload="metadata" />
+    </div>
+  );
+}
 
 export default PodcastPlayer;

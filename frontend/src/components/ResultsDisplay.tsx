@@ -1,9 +1,10 @@
 import React from "react";
+import styles from "./ResultsDisplay.module.css";
 
 interface QAResult {
   question: string;
   similarity: number;
-  answer?: string; // optional for now
+  answer?: string;
 }
 
 interface ResultsDisplayProps {
@@ -12,18 +13,18 @@ interface ResultsDisplayProps {
 
 const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results }) => {
   if (results.length === 0)
-    return <p className="text-gray-500 text-center">No results yet.</p>;
+    return <p className={styles.empty}>No results yet.</p>;
 
   return (
-    <div className="grid grid-cols-2 gap-8 w-11/12 mx-auto">
+    <div className={styles.resultsGrid}>
       {/* Left Column - Similar Questions */}
-      <div>
-        <h2 className="text-xl font-semibold mb-3 text-black">Similar Questions</h2>
-        <ul className="space-y-3">
+      <div className={styles.section}>
+        <h2 className={styles.heading}>Similar Questions</h2>
+        <ul className={styles.list}>
           {results.map((item, i) => (
-            <li key={i} className="p-3 border rounded-lg bg-gray-50">
-              <p className="font-medium text-black">{item.question}</p>
-              <p className="text-sm text-gray-500">
+            <li key={i} className={styles.item}>
+              <p className={styles.question}>{item.question}</p>
+              <p className={styles.similarity}>
                 Similarity: {item.similarity.toFixed(4)}
               </p>
             </li>
@@ -32,12 +33,12 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results }) => {
       </div>
 
       {/* Right Column - Answers */}
-      <div>
-        <h2 className="text-xl font-semibold mb-3 text-black">Answers</h2>
-        <ul className="space-y-3">
+      <div className={styles.section}>
+        <h2 className={styles.heading}>Answers</h2>
+        <ul className={styles.list}>
           {results.map((item, i) => (
-            <li key={i} className="p-3 border rounded-lg bg-gray-50">
-              <p className="text-gray-700 italic">
+            <li key={i} className={styles.item}>
+              <p className={styles.answer}>
                 {item.answer || "No answer loaded yet."}
               </p>
             </li>
