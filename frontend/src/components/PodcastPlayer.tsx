@@ -67,7 +67,6 @@ const PodcastPlayer: React.FC<PodcastPlayerProps> = ({
 
   // Seek when seekTime changes
   useEffect(() => {
-    console.log('seek time changed', seekTime)
     if (!audioRef.current) return;
     if (seekTime == null) return;
 

@@ -22,9 +22,18 @@ export default function QACard({ result, onPlayClick }: QACardProps) {
       <CardHeader className={styles.header}>
         <div className={styles.headerRow}>
           <div style={{ flex: 1 }}>
-            <h3 className={styles.title}>
-              {result.question}
-            </h3>
+            <span>
+              {result.episode_image && (
+              <img 
+                src={result.episode_image}
+                alt={result.title}
+                className={styles.episodeImage}
+              />)}
+              <h3 className={styles.title}>
+                {result.question}
+              </h3>
+
+            </span>
             <div className={styles.meta}>
               <span className={styles.author}>ENTER PODCAST TITLE</span>
               <span className={styles.metaDot}>•</span>

@@ -6,6 +6,7 @@ import PodcastPlayer from "./components/PodcastPlayer";
 import type { QAResult } from "./components/types";
 import { usePostHog } from '@posthog/react';
 import styles from "./App.module.css";
+import { Button } from "./components/ui/button";
 
 const App: React.FC = () => {
   const posthog = usePostHog();
@@ -59,17 +60,23 @@ const App: React.FC = () => {
       <Navbar />
       <div className={styles.container}>
         <div className={styles.header}>
-          <h1 className={styles.title}>Stories</h1>
           <p className={styles.subtitle}>
             Search for career wisdom, across thousands of conversations ✨
           </p>
         </div>
         <SearchBar onSearch={handleSearch} />
+        <div className={styles.suggestions}>
+          <p>Suggestions:</p>
+          <Button className={styles.suggestionBtn} onClick={() => handleSearch("What should I learn?")}>What should I learn?</Button>
+          <Button className={styles.suggestionBtn} onClick={() => handleSearch("Zuckerberg stories")}>Zuckerberg stories?</Button>
+          <Button className={styles.suggestionBtn} onClick={() => handleSearch("What career advice would you give?")}>What career advice would you give?</Button>
+        </div>
         {loading ? (
           <p className={styles.loading}>Searching...</p>
         ) : (
           <ResultsList results={results} onPlayClick={handlePlayClick} />
         )}
+        
         <PodcastPlayer
           episode={currentEpisode}
           seekTime={seekTime}
