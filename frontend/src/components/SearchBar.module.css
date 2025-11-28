@@ -11,6 +11,7 @@
   box-shadow: var(--shadow-md);
   padding: var(--space-2);
   border: 1px solid var(--color-muted);
+  margin-bottom: var(--space-4);
 }
 
 .icon {
@@ -38,4 +39,10 @@
 .button:hover {
   background: var(--color-text);
   color: var(--color-surface);
+}
+
+@media (max-width: 768px) {
+  .input {
+    font-size: var(--font-size-md);
+  }
 }

@@ -22,7 +22,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
         <Search className={styles.icon} />
         <Input
           type="text"
-          placeholder="Ask anything about career development..."
+          placeholder="Ask any career questions..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className={styles.input}

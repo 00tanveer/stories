@@ -5,7 +5,7 @@ body {
 
 /* Typography presets for common HTML elements */
 h1 {
-    font-size: 2.25rem;
+    font-size: 3.25rem;
     font-weight: 700;
     line-height: 1.15;
     margin: 0 0 var(--space-4) 0;
@@ -66,7 +66,45 @@ a {
     transition: color var(--duration-fast);
 }
 
+/* Responsive typography adjustments */
+@media (max-width: 768px) {
+    /* Tablet and below */
+    h1 {
+        font-size: 2rem;
+    }
+    h2 {
+        font-size: 1.25rem;
+    }
+    h3 {
+        font-size: 1rem;
+    }
+}
 
+@media (max-width: 480px) {
+    /* Phone */
+    h1 {
+        font-size: 1.75rem;
+    }
+    h2 {
+        font-size: 1.125rem;
+    }
+    h3 {
+        font-size: 0.95rem;
+    }
+    p {
+        font-size: 0.95rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    /* Desktop */
+    h1 {
+        font-size: 3.5rem;
+    }
+    .container {
+        max-width: 80rem;
+    }
+}
 
 /* Minimal utility layer — keep very small and intentional */
 .flex { display: flex; align-items: center; }

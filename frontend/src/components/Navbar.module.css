@@ -1,23 +1,30 @@
 .navbar {
+  position: relative;
   height: 5rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: var(--space-4);
   background: black;
   border-bottom: 1px solid var(--color-muted);
 }
 
+h1 {
+  margin: 0;
+  color: white;
+  /* font-size: 1.5rem; */
+  font-weight: bold;
+  text-align: center;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
 /* Example: override for a special button */
 .howToBtn {
+  position: absolute;
+  top: 50%;
+  right: 30px;
+  color: black;
   background: var(--color-surface);
-  color: var(--color-text);
-  margin-left: var(--space-5);
-  margin-right: var(--space-5);
-  transition: background var(--duration-fast), color var(--duration-fast);
-}
-.howToBtn:hover {
-  background: var(--color-bg);
-  color: var(--color-text);
-  cursor: pointer;
+  transform: translateY(-50%);
+  padding: var(--space-2) var(--space-4);
 }
