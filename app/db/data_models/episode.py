@@ -12,6 +12,7 @@ class Episode(Base):
     id: Mapped[str] = mapped_column(String, primary_key=True)
     podcast_id: Mapped[str] = mapped_column(ForeignKey("podcasts.id"))
     title: Mapped[str]
+    description: Mapped[Optional[str]] = mapped_column(String, nullable=True, default='')
     podcast_url: Mapped[str]
     podcast_image: Mapped[str]
     episode_image: Mapped[Optional[str]] = mapped_column(String, nullable=True)
