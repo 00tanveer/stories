@@ -1,17 +1,13 @@
 import * as React from "react"
 import styles from "./Button.module.css"
-import { Slot } from "@radix-ui/react-slot"
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "destructive" | "outline" | "ghost" | "link"
   size?: "sm" | "default" | "lg" | "icon"
-  asChild?: boolean
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = "primary", size = "default", asChild = false, className = "", children, ...props }, ref) => {
-    const Comp: any = asChild ? Slot : "button"
-
+  ({ variant = "primary", size = "default", className = "", children, ...props }, ref) => {
     const variantClass = (() => {
       switch (variant) {
         case "secondary":
@@ -45,9 +41,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const classNames = [styles.button, variantClass, sizeClass, className].filter(Boolean).join(" ")
 
     return (
-      <Comp className={classNames} ref={ref} {...props}>
+      <button className={classNames} ref={ref} {...props}>
         {children}
-      </Comp>
+      </button>
     )
   }
 )
