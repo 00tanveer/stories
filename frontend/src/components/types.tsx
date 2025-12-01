@@ -1,6 +1,8 @@
 export interface QAResult {
   id: string;
   title: string;
+  podcast_title: string;
+  episode_description: string;
   author: string;
   question: string;
   answer: string;

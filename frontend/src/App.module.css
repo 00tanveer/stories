@@ -1,6 +1,6 @@
 .appRoot {
   min-height: 100vh;
-  background: var(--color-bg);
+  /* background: var(--color-bg); */
 }
 
 .container {
@@ -29,7 +29,7 @@
 }
 
 .subtitle {
-  color: var(--color-muted);
+  color: var(--color-primary);
   font-size: 1.25rem;
 }
 

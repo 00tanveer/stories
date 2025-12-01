@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import type { QAResult } from "./types";
 import styles from "./PodcastPlayer.module.css";
+import { Button } from "./ui/button";
 
 export interface PodcastPlayerHandle {
   seekTo: (seconds: number) => void;
@@ -36,6 +37,7 @@ const PodcastPlayer: React.FC<PodcastPlayerProps> = ({
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [progress, setProgress] = useState(0);
+    const [showModal, setShowModal] = useState(false);
     
     // Load Episode when it changes
     useEffect(() => {
@@ -160,60 +162,82 @@ const PodcastPlayer: React.FC<PodcastPlayerProps> = ({
 
   if (!episode) return null;
   return (
-    <div className={styles.player}>
-      {episode.episode_image && (
-        <img
-          src={episode.episode_image}
-          alt={episode.title}
-          className={styles.episodeImage}
-        />
-      )}
-
-      <div className={styles.info}>
-        <h2 className={styles.title}>{episode.title}</h2>
-        <p className={styles.duration}>
-          {Math.round(episode.duration / 60)} min
-        </p>
-
-        {/* Custom progress bar */}
-        <div className={styles.progressRow}>
-          <span className={styles.time}>{formatTime(currentTime)}</span>
-          <input
-            type="range"
-            value={progress}
-            onChange={handleSeek}
-            className={styles.progressBar}
+    <>
+      <div className={styles.player}>
+        {episode.episode_image && (
+          <img
+            src={episode.episode_image}
+            alt={episode.title}
+            className={styles.episodeImage}
           />
-          <span className={`${styles.time} ${styles.timeEnd}`}>{formatTime(duration)}</span>
+        )}
+        <Button className={styles.shownotes} onClick={() => setShowModal(true)}>
+          Show Notes
+        </Button>
+
+        <div className={styles.info}>
+          <h2 className={styles.title}>{episode.title}</h2>
+          <p className={styles.duration}>
+            {Math.round(episode.duration / 60)} min
+          </p>
+
+          {/* Custom progress bar */}
+          <div className={styles.progressRow}>
+            <span className={styles.time}>{formatTime(currentTime)}</span>
+            <input
+              type="range"
+              value={progress}
+              onChange={handleSeek}
+              className={styles.progressBar}
+            />
+            <span className={`${styles.time} ${styles.timeEnd}`}>{formatTime(duration)}</span>
+          </div>
+
+          {/* Controls */}
+          <div className={styles.controls}>
+            <button
+              onClick={() => skip(-10)}
+              className={styles.controlBtn}
+            >
+              ⏪ 10s
+            </button>
+
+            <button
+              onClick={togglePlay}
+              className={styles.playBtn}
+            >
+              {isPlaying ? "❚❚" : "▶"}
+            </button>
+
+            <button
+              onClick={() => skip(10)}
+              className={styles.controlBtn}
+            >
+              10s ⏩
+            </button>
+          </div>
         </div>
 
-        {/* Controls */}
-        <div className={styles.controls}>
-          <button
-            onClick={() => skip(-10)}
-            className={styles.controlBtn}
-          >
-            ⏪ 10s
-          </button>
-
-          <button
-            onClick={togglePlay}
-            className={styles.playBtn}
-          >
-            {isPlaying ? "❚❚" : "▶"}
-          </button>
-
-          <button
-            onClick={() => skip(10)}
-            className={styles.controlBtn}
-          >
-            10s ⏩
-          </button>
-        </div>
+        <audio ref={audioRef} src={episode.enclosure_url} preload="metadata" />
       </div>
 
-      <audio ref={audioRef} src={episode.enclosure_url} preload="metadata" />
-    </div>
+      {/* Modal */}
+      {showModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowModal(false)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2>Show Notes</h2>
+              <button className={styles.modalClose} onClick={() => setShowModal(false)}>
+                ✕
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <p>{episode.episode_description || "No show notes available."}</p>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

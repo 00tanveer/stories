@@ -1,16 +1,31 @@
 .navbar {
   position: relative;
   height: 5rem;
-  background: black;
-  border-bottom: 1px solid var(--color-muted);
+  padding-top: var(--space-4);
+  /* background: var(--color-primary); */
 }
 
+.logo {
+  height: 80px;
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+@media (max-width: 600px) {
+  .logo {
+    height: 65px;
+    left: 10px;
+  }
+  
+}
 h1 {
   margin: 0;
-  color: white;
+  color: var(--color-primary);
   /* font-size: 1.5rem; */
   font-weight: bold;
   text-align: center;
+  font-family: var(--font-title);
   position: absolute;
   left: 50%;
   top: 50%;

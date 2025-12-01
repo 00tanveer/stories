@@ -35,7 +35,7 @@ export default function QACard({ result, onPlayClick }: QACardProps) {
 
             </span>
             <div className={styles.meta}>
-              <span className={styles.author}>ENTER PODCAST TITLE</span>
+              <span className={styles.author}>{result.podcast_title}</span>
               <span className={styles.metaDot}>•</span>
               <span>{result.author}</span>
                <Button
