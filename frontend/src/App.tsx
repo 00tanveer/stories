@@ -63,7 +63,7 @@ const App: React.FC = () => {
           <p className={styles.subtitle}>
             Search for career wisdom, across thousands of conversations ✨
           </p>
-          <p className={styles.note}>Currently, just indexed software engineering podcasts. v0.0.alpha-1</p>
+          <p className={styles.note}>Currently, just indexed software engineering podcasts. v0.0.1-alpha</p>
         </div>
         <SearchBar onSearch={handleSearch} />
         <div className={styles.suggestions}>

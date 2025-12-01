@@ -1,0 +1,17 @@
+name: Ensure changelog updated
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Check if CHANGELOG.md is updated
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          git diff --name-only origin/${{ github.base_ref }} HEAD | grep -q '^CHANGELOG.md$' || (echo "CHANGELOG.md not updated!" && exit 1)
