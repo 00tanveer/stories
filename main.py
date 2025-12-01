@@ -1,7 +1,9 @@
 # main.py
+import asyncio
 from app.services.retrieval import Retriever
 import uuid
 import json
+from app.services.indexer import Indexer
 
 def main():
     # # Initialize the Indexer
@@ -26,8 +28,8 @@ def main():
     # v2 = indexer.get_embedding(q2)
     # print("Cosine:", cosine(v1, v2))
     # Quick test query
-    
-    
+    pass
+def search():
     retriever = Retriever()
     retriever.count_duplicates()
     queries = [
@@ -48,5 +50,10 @@ def main():
         with open(file_path, 'w') as json_file:
             json.dump(dump, json_file, indent=4)
 
+async def update_chroma_metadata():
+    indexer = Indexer()
+    await indexer.update_metadata()
 if __name__ == "__main__":
-    main()
+    # main()
+    # search()
+    asyncio.run(update_chroma_metadata())

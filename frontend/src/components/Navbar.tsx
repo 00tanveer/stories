@@ -7,6 +7,11 @@ import navStyles from "./Navbar.module.css";
 const Navbar: React.FC = () => {
     return (
         <nav className={navStyles.navbar}>
+            <img 
+                src="/logo.png"
+                alt="Stories Logo"
+                className={navStyles.logo}
+            />
             <h1>Stories</h1>
             {/* <ThemeToggle /> */}
             {/* <Button className={navStyles.howToBtn}>

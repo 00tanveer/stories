@@ -12,7 +12,7 @@ from alembic import context
 from app.db.base import Base
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(".env.development")
 
 
 # --- Alembic Config ---

@@ -6,11 +6,15 @@ from app.api.runpod_serverless import infinity_embeddings
 from app.db.session import AsyncSessionLocal
 from app.db.data_models.episode import Episode 
 from app.db.data_models.podcast import Podcast
-from chromadb import Documents, EmbeddingFunction, Embeddings
 from sqlalchemy import select, and_
 from tqdm import tqdm
 import os
+from dotenv import load_dotenv
 
+ENV = os.getenv("APP_ENV", "development")  # default to development
+
+if ENV == "development":
+    load_dotenv(".env.development")
 
 class Indexer:
     '''This Indexer class has the abilities to index
@@ -28,7 +32,7 @@ class Indexer:
         print(os.getenv("CHROMA_PORT")) # The print output is 8001
 
         self.chroma_client = chromadb.HttpClient(host=os.getenv("CHROMA_HOST"), port=os.getenv("CHROMA_PORT"))
-        self.embeddings_generator = infinity_embeddings(self.EMBEDDING_MODEL)
+        # self.embeddings_generator = infinity_embeddings(self.EMBEDDING_MODEL)
         self.chroma_coll_config = {
             "hnsw": {
                 "space": "cosine",
@@ -80,12 +84,12 @@ class Indexer:
         async with AsyncSessionLocal() as session:
             async with session.begin():
                 stmt = (
-                    select(Episode, Podcast.author)
+                    select(Episode, Podcast.author, Podcast.title)
                     .join(Episode.podcast)
                     .where(
                         and_(
                             Episode.host_questions != [],
-                            Episode.question_answers != []
+                            Episode.question_answers != [],
                         )
                     )
                 )
@@ -93,12 +97,14 @@ class Indexer:
                 rows = result.all()
 
                 for row in rows:
-                    episode, author = row
+                    episode, author, podcast_title = row
                     episodes.append({
                         "id": episode.id,
                         "author": author,
                         "title": episode.title,
+                        "description": episode.description,
                         "podcast_url": episode.podcast_url,
+                        "podcast_title": podcast_title,
                         "episode_image": episode.episode_image,
                         "enclosure_url": episode.enclosure_url,
                         "duration": episode.duration,
@@ -215,4 +221,23 @@ class Indexer:
             print(f"Deleted collection: {collection_name}")
         except Exception as e:
             print(f"Error: {e}")
-            
+    
+    async def update_metadata(self):
+        episodes = await self.load_all_question_episodes()
+        collection = self.get_collection(self.qa_collection_name) 
+        res = collection.get(include=["metadatas"])
+        ids = res["ids"]
+        old_metas = res["metadatas"]
+        print(len(ids))
+        new_metas = []
+        for m in old_metas:
+            m = dict(m)
+            m["podcast_title"] = next((ep["podcast_title"] for ep in episodes if ep["id"] == m["id"]))
+            m["episode_description"] = next((ep["description"] for ep in episodes if ep["id"] == m["id"]))
+            new_metas.append(m)
+
+        collection.update(
+            ids=ids,
+            metadatas=new_metas
+        )
+                    
