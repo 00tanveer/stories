@@ -11,9 +11,13 @@ interface QACardProps {
 }
 export default function QACard({ result, onPlayClick }: QACardProps) {
     const [isExpanded, setIsExpanded] = useState(false);
-    const truncatedAnswer = !isExpanded && result.answer.length > 300 
-      ? result.answer.slice(0, 300) + "..." 
-      : result.answer;
+    const fullAnswer = result.answer ?? result.utterance ?? '';
+    const truncatedAnswer = !isExpanded && fullAnswer.length > 300
+      ? fullAnswer.slice(0, 300) + "..."
+      : fullAnswer;
+    const truncatedUtterance = !isExpanded && result.utterance && result.utterance.length > 300
+      ? result.utterance.slice(0, 300) + "..."
+      : result.utterance;
     const handlePlay = () => {
         onPlayClick(result);
     }
@@ -22,18 +26,31 @@ export default function QACard({ result, onPlayClick }: QACardProps) {
       <CardHeader className={styles.header}>
         <div className={styles.headerRow}>
           <div style={{ flex: 1 }}>
-            <span>
+            <div>
               {result.episode_image && (
               <img 
                 src={result.episode_image}
                 alt={result.title}
                 className={styles.episodeImage}
               />)}
-              <h3 className={styles.title}>
-                {result.question}
-              </h3>
+                {(result.question || result.utterance) && (
+                  <h3 className={styles.title}>
+                    {result.question !== "" ? 
+                    result.question : 
+                    truncatedUtterance}
+                  </h3>
 
-            </span>
+                )}
+                {((result.utterance && result.utterance.length > 300)) && (
+                  <Button 
+                      onClick={() => setIsExpanded(!isExpanded)}
+                      className={styles.showBtn}
+                  >
+                      {isExpanded ? "Show less" : "Show more"}
+                  </Button>
+                  )}
+
+            </div>
             <div className={styles.meta}>
               <span className={styles.author}>{result.podcast_title}</span>
               <span className={styles.metaDot}>•</span>
@@ -54,13 +71,13 @@ export default function QACard({ result, onPlayClick }: QACardProps) {
         <p className={styles.content}>
           {truncatedAnswer}
         </p>
-        {result.answer.length > 300 && (
+        {((result.answer && result.answer.length > 300)) && (
         <Button 
             onClick={() => setIsExpanded(!isExpanded)}
             className={styles.showBtn}
-            >
+        >
             {isExpanded ? "Show less" : "Show more"}
-            </Button>
+        </Button>
         )}
         <div className={styles.footer}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>

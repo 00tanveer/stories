@@ -40,8 +40,54 @@ const App: React.FC = () => {
         body: JSON.stringify({ query }),
       });
       const data = await res.json();
-      const docs = data.results.metadatas[0];
-      setResults(docs || []);
+      
+      // Transform combined results into QAResult format
+      const metadatas = data.results.metadatas[0] || [];
+      const documents = data.results.documents[0] || [];
+      const distances = data.results.distances[0] || [];
+      const sources = data.results.sources?.[0] || [];
+      
+      const transformedResults: QAResult[] = metadatas.map((metadata: any, index: number) => {
+        const source = sources[index];
+        const document = documents[index];
+        
+        // Base fields that exist in both collections
+        const baseResult = {
+          id: metadata.id,
+          title: metadata.title || '',
+          podcast_title: metadata.podcast_title || '',
+          episode_description: metadata.description || '',
+          author: metadata.author || '',
+          date_published: metadata.date_published || '',
+          duration: metadata.duration || 0,
+          enclosure_url: metadata.enclosure_url || '',
+          start: metadata.start,
+          end: metadata.end,
+          episode_image: metadata.episode_image || '',
+          podcast_url: metadata.podcast_url || '',
+          similarity: distances[index] || 0,
+        };
+        
+        // Add fields specific to the source collection
+        if (source === 'qa_collection') {
+          return {
+            ...baseResult,
+            question: metadata.question || '',
+            answer: metadata.answer || '',
+            // utterance: document || '',
+          };
+        } else {
+          // utterances_collection - use the document as the utterance
+          return {
+            ...baseResult,
+            question: '',
+            answer: '',
+            utterance: document,
+          };
+        }
+      });
+      // console.log(transformedResults);
+      setResults(transformedResults);
     } catch (err) {
       console.error("Search error:", err);
     } finally {
@@ -68,9 +114,10 @@ const App: React.FC = () => {
         <SearchBar onSearch={handleSearch} />
         <div className={styles.suggestions}>
           <p>Suggestions:</p>
-          <Button className={styles.suggestionBtn} onClick={() => handleSearch("What should I learn?")}>What should I learn?</Button>
+          <Button className={styles.suggestionBtn} onClick={() => handleSearch("How to be the top 1% software engineer?")}>How to be the top 1% software engineer?</Button>
           <Button className={styles.suggestionBtn} onClick={() => handleSearch("Zuckerberg stories")}>Zuckerberg stories?</Button>
           <Button className={styles.suggestionBtn} onClick={() => handleSearch("What career advice would you give?")}>What career advice would you give?</Button>
+          <Button className={styles.suggestionBtn} onClick={() => handleSearch("Career horror stories")}>Career horror stories</Button>
         </div>
         {loading ? (
           <p className={styles.loading}>Searching...</p>

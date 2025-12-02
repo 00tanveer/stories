@@ -6,7 +6,9 @@ from app.api.runpod_serverless import infinity_embeddings
 from app.db.session import AsyncSessionLocal
 from app.db.data_models.episode import Episode 
 from app.db.data_models.podcast import Podcast
+from app.db.data_models.transcript import Transcript
 from sqlalchemy import select, and_
+from sqlalchemy.orm import selectinload
 from tqdm import tqdm
 import os
 from dotenv import load_dotenv
@@ -32,7 +34,7 @@ class Indexer:
         print(os.getenv("CHROMA_PORT")) # The print output is 8001
 
         self.chroma_client = chromadb.HttpClient(host=os.getenv("CHROMA_HOST"), port=os.getenv("CHROMA_PORT"))
-        # self.embeddings_generator = infinity_embeddings(self.EMBEDDING_MODEL)
+        self.embeddings_generator = infinity_embeddings(self.EMBEDDING_MODEL)
         self.chroma_coll_config = {
             "hnsw": {
                 "space": "cosine",
@@ -42,7 +44,9 @@ class Indexer:
         }
         # collections
         self.qa_collection_name = "episode_qa_pairs"
+        self.utterances_collection_name = "utterances"
         self.qa_collection = None
+        self.utterances_collection = None
         self.batch_size = 50
     
     def init_chroma_collection(self):
@@ -51,6 +55,14 @@ class Indexer:
             configuration=self.chroma_coll_config,
             metadata = {
                 "description": "Question-answer exchanges in every podcast episode. Metadata includes timestamps",
+                "created": str(datetime.now())
+            }
+        )
+        self.utterances_collection = self.chroma_client.get_or_create_collection(
+            name=self.utterances_collection_name,
+            configuration=self.chroma_coll_config,
+            metadata = {
+                "description": "Utterances from podcast episodes. Metadata includes speaker labels and timestamps",
                 "created": str(datetime.now())
             }
         )
@@ -114,9 +126,62 @@ class Indexer:
                     })
         return episodes
     
+    async def load_all_episode_utterances(self):
+        episodes = []
+        async with AsyncSessionLocal() as session:
+            async with session.begin():
+                stmt = (
+                    select(Episode, Podcast.author, Podcast.title)
+                    .join(Episode.podcast)
+                    .join(Episode.transcript)
+                    .options(
+                        # load transcript + nested utterances
+                        selectinload(Episode.transcript)
+                            .selectinload(Transcript.utterances)
+                    )
+                )
+
+                result = await session.execute(stmt)
+                rows = result.all()
+
+                for row in rows:
+                    episode, author, podcast_title = row
+
+                    # extract utterances safely
+                    utterances = []
+                    if episode.transcript and episode.transcript.utterances:
+                        utterances = [
+                            {
+                                "id": u.id,
+                                "start": u.start,
+                                "end": u.end,
+                                "confidence": u.confidence,
+                                "speaker": u.speaker,
+                                "text": u.text,
+                            }
+                            for u in episode.transcript.utterances
+                        ]
+
+                    episodes.append({
+                        "id": episode.id,
+                        "author": author,
+                        "title": episode.title,
+                        "description": episode.description,
+                        "podcast_url": episode.podcast_url,
+                        "podcast_title": podcast_title,
+                        "episode_image": episode.episode_image,
+                        "enclosure_url": episode.enclosure_url,
+                        "duration": episode.duration,
+                        "date_published": episode.date_published,
+
+                        # your custom fields
+                        "utterances": utterances,
+                    })
+        episodes = [e for e in episodes if e['utterances']!=[]]
+        return episodes
     async def embed_batch(self, docs):
         """
-        Call Runpod's Infinity Embeddings Serverless API API to embed a batch of documents.
+        Call Runpod's Infinity Embeddings Serverless API to embed a batch of documents.
         """
         res = self.embeddings_generator.get_embeddings(docs)
 
@@ -215,6 +280,90 @@ class Indexer:
         print("🎉 Finished indexing all QA pairs!")
         print("Total items in collection:", self.qa_collection.count())
 
+    async def upsert_utterances_collection(self):
+        print("Starting Utterances indexing...")
+
+        self.utterances = self.chroma_client.get_collection(
+                name=self.utterances_collection_name)
+
+        all_episodes = await self.load_all_episode_utterances()
+        print("Loaded", len(all_episodes), "episodes")
+        episodes = self.filtered_episodes_to_index(all_episodes, self.utterances_collection)
+        print("Episodes remaining to index: ", len(episodes))
+        total_utterances = sum(len(ep["utterances"]) for ep in episodes)
+        print(f"Total utterances to index: {total_utterances}")
+        # for every episode, filter out utterances that are less than 10 words
+        for ep in episodes:
+            ep["utterances"] = [u for u in ep["utterances"] if len(u["text"].split()) >= 10]
+        filtered_total_utterances = sum(len(ep["utterances"]) for ep in episodes)
+        print(f"Total utterances to index after filtering short ones: {filtered_total_utterances}")
+        BATCH_SIZE = 100   # sweet spot for Ollama performance
+
+        batch_ids = []
+        batch_docs = []
+        batch_metas = []
+
+        for episode in tqdm(episodes, desc="Processing episodes"):
+            episode_meta_raw = {
+                k: v for k, v in episode.items()
+                if k not in ("utterances")
+            }
+            episode_meta = self.sanitize_metadata(episode_meta_raw)
+
+            utterances = episode["utterances"]
+            # qa_pairs = episode["question_answers"]
+            print(f"In episode {episode['id']}, there are {len(utterances)} utterances.")
+            for i, u in enumerate(utterances):
+                # q = u.get("question", "")
+                # a = u.get("answer", "")
+
+                # q_item = questions[i]
+                # print("q_item: ", q_item)
+                start = u.get("start")
+                end   = u.get("end")
+                speaker = u.get("speaker")
+
+                u_id = str(uuid.uuid4())
+                doc = u.get("text", "")
+
+                metadata = dict(episode_meta)
+                metadata["speaker"] = speaker
+                metadata["start"] = float(start) if start is not None else None
+                metadata["end"] = float(end) if end is not None else None
+                metadata = self.sanitize_metadata(metadata)
+
+                batch_ids.append(u_id)
+                batch_docs.append(doc)
+                batch_metas.append(metadata)
+
+                # 🚀 When batch is full → embed once → upsert once
+                if len(batch_ids) >= BATCH_SIZE:
+                    # for doc in batch_docs:
+                    #     print(doc[:100])
+                    #     print('\n')
+                    embeddings = await self.embed_batch(batch_docs)
+                    self.utterances.upsert(
+                        ids=batch_ids,
+                        embeddings=embeddings,
+                        documents=batch_docs,
+                        metadatas=batch_metas
+                    )
+                    batch_ids, batch_docs, batch_metas = [], [], []
+
+        # --- Flush last batch ---
+        if batch_ids:
+            embeddings = await self.embed_batch(batch_docs)
+            self.utterances_collection.upsert(
+                ids=batch_ids,
+                embeddings=embeddings,
+                documents=batch_docs,
+                metadatas=batch_metas
+            )
+
+        print("🎉 Finished indexing all QA pairs!")
+        print("Total items in collection:", self.utterances_collection.count())
+        
+        
     def delete_collection(self, collection_name):
         try:
             self.chroma_client.delete_collection(collection_name)
