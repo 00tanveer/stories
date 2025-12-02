@@ -4,8 +4,10 @@ export interface QAResult {
   podcast_title: string;
   episode_description: string;
   author: string;
-  question: string;
-  answer: string;
+  question?: string;
+  answer?: string;
+  utterance?: string;
+  similarity: number;
   date_published: string;
   duration: number;
   enclosure_url: string;

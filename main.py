@@ -55,5 +55,5 @@ async def update_chroma_metadata():
     await indexer.update_metadata()
 if __name__ == "__main__":
     # main()
-    # search()
-    asyncio.run(update_chroma_metadata())
+    search()
+    # asyncio.run(update_chroma_metadata())
