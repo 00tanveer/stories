@@ -17,6 +17,12 @@ All notable changes to Stories will be documented here. The format is based on [
 ### Known issues
 
 ### Security
+
+## [0.0.2-alpha] - 2025-12-02
+### Added 
+- Indexed all utterances across all episodes
+---
+
 ## [0.0.1-alpha] - 2025-12-01
 ### Added
 - An ETL pipeline to fetch data from Podcastindex API
