@@ -5,6 +5,8 @@ All notable changes to Stories will be documented here. The format is based on [
 ## [Unreleased]
 
 ### Added
+- Curation of top 500 technology podcasts
+- Browse podcasts
 
 ### Changed 
 
@@ -18,6 +20,14 @@ All notable changes to Stories will be documented here. The format is based on [
 
 ### Security
 
+## [0.0.3-alpha] 2025-12-07
+### Added
+- Added key word search (sparse retrieval) with elasticsearch to make retrieval better for shorter queries
+- Better Player UI for mobile
+- Improved search UI 
+
+### Known issues
+- Need to review load_utterance_episodes() functions in podcast services
 ## [0.0.2-alpha] - 2025-12-02
 ### Added 
 - Indexed all utterances across all episodes
