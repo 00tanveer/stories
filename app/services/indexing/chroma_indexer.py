@@ -9,6 +9,8 @@ from app.db.data_models.podcast import Podcast
 from app.db.data_models.transcript import Transcript
 from sqlalchemy import select, and_
 from sqlalchemy.orm import selectinload
+from app.services.podcasts import load_all_episode_utterances
+from app.services.podcasts import load_all_question_episodes
 from tqdm import tqdm
 import os
 from dotenv import load_dotenv
@@ -18,7 +20,7 @@ ENV = os.getenv("APP_ENV", "development")  # default to development
 if ENV == "development":
     load_dotenv(".env.development")
 
-class Indexer:
+class ChromaIndexer:
     '''This Indexer class has the abilities to index
         anything inside the Stories project with ChromaDB
     Args:
@@ -91,94 +93,8 @@ class Indexer:
 
         return clean
     
-    async def load_all_question_episodes(self):
-        episodes = []
-        async with AsyncSessionLocal() as session:
-            async with session.begin():
-                stmt = (
-                    select(Episode, Podcast.author, Podcast.title)
-                    .join(Episode.podcast)
-                    .where(
-                        and_(
-                            Episode.host_questions != [],
-                            Episode.question_answers != [],
-                        )
-                    )
-                )
-                result = await session.execute(stmt)
-                rows = result.all()
-
-                for row in rows:
-                    episode, author, podcast_title = row
-                    episodes.append({
-                        "id": episode.id,
-                        "author": author,
-                        "title": episode.title,
-                        "description": episode.description,
-                        "podcast_url": episode.podcast_url,
-                        "podcast_title": podcast_title,
-                        "episode_image": episode.episode_image,
-                        "enclosure_url": episode.enclosure_url,
-                        "duration": episode.duration,
-                        "date_published": episode.date_published,
-                        "questions": episode.host_questions,
-                        "question_answers": episode.question_answers,
-                    })
-        return episodes
     
-    async def load_all_episode_utterances(self):
-        episodes = []
-        async with AsyncSessionLocal() as session:
-            async with session.begin():
-                stmt = (
-                    select(Episode, Podcast.author, Podcast.title)
-                    .join(Episode.podcast)
-                    .join(Episode.transcript)
-                    .options(
-                        # load transcript + nested utterances
-                        selectinload(Episode.transcript)
-                            .selectinload(Transcript.utterances)
-                    )
-                )
-
-                result = await session.execute(stmt)
-                rows = result.all()
-
-                for row in rows:
-                    episode, author, podcast_title = row
-
-                    # extract utterances safely
-                    utterances = []
-                    if episode.transcript and episode.transcript.utterances:
-                        utterances = [
-                            {
-                                "id": u.id,
-                                "start": u.start,
-                                "end": u.end,
-                                "confidence": u.confidence,
-                                "speaker": u.speaker,
-                                "text": u.text,
-                            }
-                            for u in episode.transcript.utterances
-                        ]
-
-                    episodes.append({
-                        "id": episode.id,
-                        "author": author,
-                        "title": episode.title,
-                        "description": episode.description,
-                        "podcast_url": episode.podcast_url,
-                        "podcast_title": podcast_title,
-                        "episode_image": episode.episode_image,
-                        "enclosure_url": episode.enclosure_url,
-                        "duration": episode.duration,
-                        "date_published": episode.date_published,
-
-                        # your custom fields
-                        "utterances": utterances,
-                    })
-        episodes = [e for e in episodes if e['utterances']!=[]]
-        return episodes
+    
     async def embed_batch(self, docs):
         """
         Call Runpod's Infinity Embeddings Serverless API to embed a batch of documents.
@@ -209,7 +125,7 @@ class Indexer:
         if self.qa_collection is None:
             self.init_chroma_collection()
 
-        all_episodes = await self.load_all_question_episodes()
+        all_episodes = await load_all_question_episodes()
         print("Loaded", len(all_episodes), "episodes")
 
         episodes = self.filtered_episodes_to_index(all_episodes, self.qa_collection)
@@ -286,7 +202,7 @@ class Indexer:
         self.utterances = self.chroma_client.get_collection(
                 name=self.utterances_collection_name)
 
-        all_episodes = await self.load_all_episode_utterances()
+        all_episodes = await load_all_episode_utterances()
         print("Loaded", len(all_episodes), "episodes")
         episodes = self.filtered_episodes_to_index(all_episodes, self.utterances_collection)
         print("Episodes remaining to index: ", len(episodes))

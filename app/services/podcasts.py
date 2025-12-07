@@ -23,6 +23,7 @@ from app.db.data_models.transcript_word import TranscriptWord
 
 # sqlalchemy 
 from sqlalchemy import select, func, and_, text
+from sqlalchemy.orm import selectinload
 
 
 def get_version():
@@ -411,7 +412,84 @@ async def read_episode_data() -> Dict:
                 )).limit(5)
             results = await session.execute(stmt)
             return results.all()
-                
+
+async def load_all_question_episodes():
+        episodes = []
+        async with AsyncSessionLocal() as session:
+            async with session.begin():
+                stmt = (
+                    select(Episode, Podcast.author, Podcast.title)
+                    .join(Episode.podcast)
+                    .where(
+                        and_(
+                            Episode.host_questions != [],
+                            Episode.question_answers != [],
+                        )
+                    )
+                )
+                result = await session.execute(stmt)
+                rows = result.all()
+
+                for row in rows:
+                    episode, author, podcast_title = row
+                    episodes.append({
+                        "id": episode.id,
+                        "author": author,
+                        "title": episode.title,
+                        "description": episode.description,
+                        "podcast_url": episode.podcast_url,
+                        "podcast_title": podcast_title,
+                        "episode_image": episode.episode_image,
+                        "enclosure_url": episode.enclosure_url,
+                        "duration": episode.duration,
+                        "date_published": episode.date_published,
+                        "questions": episode.host_questions,
+                        "question_answers": episode.question_answers,
+                    })
+        return episodes
+async def load_all_episode_utterances():
+        async with AsyncSessionLocal() as session:
+            async with session.begin():
+                stmt = (
+                    select(Episode, Podcast.author, Podcast.title)
+                    .join(Episode.podcast)
+                    .join(Episode.transcript)
+                    .options(
+                        # load transcript + nested utterances
+                        selectinload(Episode.transcript)
+                            .selectinload(Transcript.utterances)
+                    )
+                )
+
+                result = await session.execute(stmt)
+                rows = result.all()
+                utterances = []
+                for row in rows:
+                    episode, author, podcast_title = row
+                    if episode.transcript and episode.transcript.utterances:
+                        for u in episode.transcript.utterances:
+                            utterances.append({
+                                "id": episode.id,
+                                "author": author,
+                                "title": episode.title,
+                                "description": episode.description,
+                                "podcast_url": episode.podcast_url,
+                                "podcast_title": podcast_title,
+                                "episode_image": episode.episode_image,
+                                "enclosure_url": episode.enclosure_url,
+                                "duration": episode.duration,
+                                "date_published": episode.date_published,
+                                "start": u.start,
+                                "end": u.end,
+                                "confidence": u.confidence,
+                                "speaker": u.speaker,
+                                "text": u.text,
+                            })  
+        print(len(utterances))
+        # for u in utterances[:4]:
+        #     print(u)
+        #     print("-----\n")
+        return utterances
 async def update_confidence_from_json():
     """
     Update only confidence fields for transcript_utterance and transcript_word.

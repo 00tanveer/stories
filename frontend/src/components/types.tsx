@@ -7,7 +7,8 @@ export interface QAResult {
   question?: string;
   answer?: string;
   utterance?: string;
-  similarity: number;
+  score?: number; // server-provided normalized score
+  source?: string; // e.g., 'qa_collection' or 'utterances_collection'
   date_published: string;
   duration: number;
   enclosure_url: string;
