@@ -1,15 +1,16 @@
-import React, { useState } from "react";
+import React from "react";
 import { Search } from 'lucide-react';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import styles from "./SearchBar.module.css";
 
 interface SearchBarProps {
+  query: string;
+  onQueryChange: (value: string) => void;
   onSearch: (query: string) => void;
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
-  const [query, setQuery] = useState("");
+const SearchBar: React.FC<SearchBarProps> = ({ query, onQueryChange, onSearch }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +25,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
           type="text"
           placeholder="Ask any career questions..."
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => onQueryChange(e.target.value)}
           className={styles.input}
         />
         <Button type="submit" className={styles.button}>

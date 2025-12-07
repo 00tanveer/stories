@@ -11,7 +11,7 @@ interface QACardProps {
 }
 export default function QACard({ result, onPlayClick }: QACardProps) {
     const [isExpanded, setIsExpanded] = useState(false);
-    const fullAnswer = result.answer ?? result.utterance ?? '';
+    const fullAnswer = result.answer ?? '';
     const truncatedAnswer = !isExpanded && fullAnswer.length > 300
       ? fullAnswer.slice(0, 300) + "..."
       : fullAnswer;
@@ -33,14 +33,11 @@ export default function QACard({ result, onPlayClick }: QACardProps) {
                 alt={result.title}
                 className={styles.episodeImage}
               />)}
-                {(result.question || result.utterance) && (
-                  <h3 className={styles.title}>
-                    {result.question !== "" ? 
-                    result.question : 
-                    truncatedUtterance}
-                  </h3>
-
-                )}
+                <h3 className={styles.title}>
+                  {result.question !== "" 
+                    ? (result.question ? result.question : truncatedUtterance)
+                    : truncatedUtterance}
+                </h3>
                 {((result.utterance && result.utterance.length > 300)) && (
                   <Button 
                       onClick={() => setIsExpanded(!isExpanded)}
@@ -48,7 +45,7 @@ export default function QACard({ result, onPlayClick }: QACardProps) {
                   >
                       {isExpanded ? "Show less" : "Show more"}
                   </Button>
-                  )}
+                )}
 
             </div>
             <div className={styles.meta}>
