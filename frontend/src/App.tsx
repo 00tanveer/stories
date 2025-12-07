@@ -12,6 +12,7 @@ const App: React.FC = () => {
   const posthog = usePostHog();
   const [results, setResults] = useState<QAResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [query, setQuery] = useState("");
   // Podcastplayer state to pass as props
   const [sessionId, setSessionId] = useState<string | null>(null);
   type SeekTime = { time: number; token: number };
@@ -40,54 +41,12 @@ const App: React.FC = () => {
         body: JSON.stringify({ query }),
       });
       const data = await res.json();
-      
-      // Transform combined results into QAResult format
-      const metadatas = data.results.metadatas[0] || [];
-      const documents = data.results.documents[0] || [];
-      const distances = data.results.distances[0] || [];
-      const sources = data.results.sources?.[0] || [];
-      
-      const transformedResults: QAResult[] = metadatas.map((metadata: any, index: number) => {
-        const source = sources[index];
-        const document = documents[index];
-        
-        // Base fields that exist in both collections
-        const baseResult = {
-          id: metadata.id,
-          title: metadata.title || '',
-          podcast_title: metadata.podcast_title || '',
-          episode_description: metadata.description || '',
-          author: metadata.author || '',
-          date_published: metadata.date_published || '',
-          duration: metadata.duration || 0,
-          enclosure_url: metadata.enclosure_url || '',
-          start: metadata.start,
-          end: metadata.end,
-          episode_image: metadata.episode_image || '',
-          podcast_url: metadata.podcast_url || '',
-          similarity: distances[index] || 0,
-        };
-        
-        // Add fields specific to the source collection
-        if (source === 'qa_collection') {
-          return {
-            ...baseResult,
-            question: metadata.question || '',
-            answer: metadata.answer || '',
-            // utterance: document || '',
-          };
-        } else {
-          // utterances_collection - use the document as the utterance
-          return {
-            ...baseResult,
-            question: '',
-            answer: '',
-            utterance: document,
-          };
-        }
-      });
-      // console.log(transformedResults);
-      setResults(transformedResults);
+      console.log(data);
+      // Use server-provided results directly without client-side transformation
+      const serverResults: QAResult[] = Array.isArray(data)
+        ? data
+        : (data.results ?? []);
+      setResults(serverResults);
     } catch (err) {
       console.error("Search error:", err);
     } finally {
@@ -111,18 +70,22 @@ const App: React.FC = () => {
           </p>
           <p className={styles.note}>Currently, just indexed software engineering podcasts. v0.0.1-alpha</p>
         </div>
-        <SearchBar onSearch={handleSearch} />
+        <SearchBar
+          query={query}
+          onQueryChange={setQuery}
+          onSearch={handleSearch}
+        />
         <div className={styles.suggestions}>
           <p>Suggestions:</p>
-          <Button className={styles.suggestionBtn} onClick={() => handleSearch("How to be the top 1% software engineer?")}>How to be the top 1% software engineer?</Button>
-          <Button className={styles.suggestionBtn} onClick={() => handleSearch("Zuckerberg stories")}>Zuckerberg stories?</Button>
-          <Button className={styles.suggestionBtn} onClick={() => handleSearch("What career advice would you give?")}>What career advice would you give?</Button>
-          <Button className={styles.suggestionBtn} onClick={() => handleSearch("Career horror stories")}>Career horror stories</Button>
+          <Button className={styles.suggestionBtn} onClick={() => { setQuery("How to be the top 1% software engineer?"); handleSearch("How to be the top 1% software engineer?"); }}>How to be the top 1% software engineer?</Button>
+          <Button className={styles.suggestionBtn} onClick={() => { setQuery("Zuckerberg stories"); handleSearch("Zuckerberg stories"); }}>Zuckerberg stories?</Button>
+          <Button className={styles.suggestionBtn} onClick={() => { setQuery("What career advice would you give?"); handleSearch("What career advice would you give?"); }}>What career advice would you give?</Button>
+          <Button className={styles.suggestionBtn} onClick={() => { setQuery("Career horror stories"); handleSearch("Career horror stories"); }}>Career horror stories</Button>
         </div>
         {loading ? (
           <p className={styles.loading}>Searching...</p>
         ) : (
-          <ResultsList results={results} onPlayClick={handlePlayClick} />
+          <><p>Retrieved {results.length} results for <strong>{query}</strong>.</p><ResultsList results={results} onPlayClick={handlePlayClick} /></>
         )}
         
         <PodcastPlayer

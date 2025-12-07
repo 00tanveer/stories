@@ -5,6 +5,9 @@ import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 from posthog import Posthog, new_context, identify_context, set_context_session
 import time
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 posthog = Posthog(
   project_api_key='phc_dZbOlokpJRnkDjyK8ZAyLRhcBlF5f4VSJwXLexQVaId',
@@ -71,8 +74,18 @@ retriever = Retriever()
 
 # ---- Request/Response Models ----
 class QueryRequest(BaseModel):
+    # Core search inputs
     query: str
     top_k: int = 20
+
+    # Data-rich context (optional; populated at route layer from FastAPI Request)
+    user_id: str | None = None
+    session_id: str | None = None
+    path: str | None = None
+    method: str | None = None
+    client_ip: str | None = None
+    user_agent: str | None = None
+    timestamp_ms: int | None = None
 
 # ---- Routes ----
 @app.get("/")
@@ -84,20 +97,48 @@ def health():
     return {"status": "ok"}
 
 @app.post("/search")
-def search(request: QueryRequest):
+def search(request: QueryRequest, req: Request):
     """Perform a semantic search against indexed questions."""
     try:
-        results = retriever.search(request.query, top_k=request.top_k)
-        return {"query": request.query, "results": results}
+        # Enrich the request model with HTTP context for downstream services/analytics
+        request.path = str(req.url.path)
+        request.method = req.method
+        request.session_id = req.headers.get("X-POSTHOG-SESSION-ID")
+        request.user_id = req.headers.get("X-User-ID", req.client.host)
+        request.client_ip = req.client.host if req.client else None
+        request.user_agent = req.headers.get("User-Agent")
+        request.timestamp_ms = int(time.time() * 1000)
+
+        results = retriever.hybrid_search(request.query, top_k=request.top_k)
+        return {
+            "query": request.query,
+            "context": {
+                "path": request.path,
+                "method": request.method,
+                "user_id": request.user_id,
+                "session_id": request.session_id,
+                "client_ip": request.client_ip,
+                "user_agent": request.user_agent,
+                "timestamp_ms": request.timestamp_ms,
+            },
+            "results": results,
+        }
     except Exception as e:
         print(e)
+        logger.error(f"Search error: {e}")
+        # Use enriched request context for error analytics
         posthog.capture_exception(
-            e, 
-            'user_distinct_id', 
+            e,
             properties={
-                "path": request.url.path,
-                "method": request.method,
-            })
+                "path": request.path or str(req.url.path),
+                "method": request.method or req.method,
+                "user_id": request.user_id,
+                "session_id": request.session_id,
+                "client_ip": request.client_ip,
+                "user_agent": request.user_agent,
+                "timestamp_ms": request.timestamp_ms,
+            },
+        )
         raise HTTPException(status_code=500, detail=str(e))
 
 
