@@ -20,6 +20,11 @@ All notable changes to Stories will be documented here. The format is based on [
 
 ### Security
 
+## [0.0.4-alpha] 2025-12-10
+### Added 
+- Created a custom DAG data flow library to orchestrate data plumbing
+- Added Cloudflare R2 cloud storage support for artifacts
+
 ## [0.0.3-alpha] 2025-12-07
 ### Added
 - Added key word search (sparse retrieval) with elasticsearch to make retrieval better for shorter queries

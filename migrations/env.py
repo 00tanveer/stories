@@ -12,7 +12,11 @@ from alembic import context
 from app.db.base import Base
 from dotenv import load_dotenv
 
-load_dotenv(".env.development")
+ENV = os.getenv("APP_ENV", "development")  # default to development
+
+if ENV == "development":
+    load_dotenv(".env.development")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 
 # --- Alembic Config ---
@@ -21,10 +25,6 @@ config = context.config
 # Enable Alembic logging
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
-
-
-# --- Database URL from environment variable ---
-DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if not DATABASE_URL:
     raise RuntimeError(

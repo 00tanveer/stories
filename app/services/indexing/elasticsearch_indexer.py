@@ -2,13 +2,19 @@ from elasticsearch import Elasticsearch
 from elasticsearch import helpers
 from tqdm import tqdm
 from app.services.podcasts import load_all_episode_utterances
+from dotenv import load_dotenv
+import os 
 
+ENV = os.getenv("APP_ENV", "development")  # default to development
+
+if ENV == "development":
+    load_dotenv(".env.development")
 class ESIndexer:
     def __init__(self):
-        HOST = 'http://elasticsearch:9200'
+        ES_HOST = os.getenv("ES_HOST")
         # Increase client-level timeouts and enable retries to avoid premature read timeouts
         self.es = Elasticsearch(
-            HOST,
+            ES_HOST,
             request_timeout=60,  # seconds
             retry_on_timeout=True,
             max_retries=3,
@@ -54,14 +60,16 @@ class ESIndexer:
         - index_name: target ES index
         - batch_size: number of docs per bulk request (tune by payload size)
         """
-    # Ensure ES is reachable before attempting bulk
+
+        # Ensure ES is reachable before attempting bulk operations
         self.assert_connection()
         es_client = self.get_client()
+
         # Load utterance documents. Expect each item to be a dict with a unique 'id' and fields.
         utterances = await load_all_episode_utterances()
-        print(len(utterances), "utterances to index into Elasticsearch.")
-        # Build actions for helpers.bulk
-        # Generator of actions for streaming bulk
+        total = len(utterances)
+        print(total, "utterances to index into Elasticsearch.")
+
         def action_iter():
             for doc in utterances:
                 yield {
@@ -69,10 +77,8 @@ class ESIndexer:
                     "_source": doc,
                 }
 
-        total = len(utterances)
         print(f"Indexing {total} utterances into Elasticsearch (batch_size={batch_size})…")
 
-        # Use streaming_bulk to get per-item progress
         successes = 0
         failures = 0
         iterator = helpers.streaming_bulk(
@@ -80,13 +86,10 @@ class ESIndexer:
             action_iter(),
             chunk_size=batch_size,
             request_timeout=120,
-            refresh='wait_for'
+            refresh="wait_for",
         )
 
-        if tqdm:
-            progress = tqdm(total=total, unit='docs')
-        else:
-            progress = None
+        progress = tqdm(total=total, unit="docs") if total else None
 
         for ok, _ in iterator:
             if ok:
@@ -100,6 +103,11 @@ class ESIndexer:
             progress.close()
 
         print(f"Bulk indexing complete. Successes: {successes}, Failures: {failures}")
-        
-
+        return {
+            "index": index_name,
+            "total": total,
+            "successes": successes,
+            "failures": failures,
+        }
     
+
