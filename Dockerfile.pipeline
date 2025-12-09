@@ -10,7 +10,8 @@ RUN apt-get update && apt-get install -y build-essential gcc curl && rm -rf /var
 
 COPY requirements/base.txt requirements/base.txt
 RUN pip install --no-cache-dir -r requirements/base.txt
-
+COPY requirements/pipeline.txt requirements/pipeline.txt
+RUN pip install --no-cache-dir -r requirements/pipeline.txt
 # ---------------------------
 # 2) Copy application source
 # ---------------------------
