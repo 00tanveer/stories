@@ -94,7 +94,9 @@ def api_handler(max_retries=3, backoff_factor=1.5):
 
 class PDI_API:
     def __init__(self):
-        load_dotenv()
+        ENV = os.getenv("APP_ENV", "development")  # default to development
+        if ENV == "development":
+            load_dotenv(".env.development")
         self.api_key = os.getenv('PODCASTINDEX_APIKEY')
         self.api_secret = os.getenv('PODCASTINDEX_SECRET')
         self.base_url = "https://api.podcastindex.org/api/1.0/"

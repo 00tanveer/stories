@@ -10,3 +10,4 @@ asyncpg
 chromadb
 posthog
 elasticsearch
+boto3

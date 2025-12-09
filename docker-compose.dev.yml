@@ -7,6 +7,7 @@ services:
       - discovery.type=single-node
       - xpack.security.enabled=false
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - path.repo=/backup
     ulimits:
       memlock:
         soft: -1
@@ -16,12 +17,51 @@ services:
       - "9200:9200"
     volumes:
       - esdata:/usr/share/elasticsearch/data
+      - ./es_snapshots:/backup
     healthcheck:
       test: ["CMD-SHELL", "curl -s http://localhost:9200 >/dev/null || exit 1"]
       interval: 20s
       timeout: 10s
       retries: 10
-
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.pipeline.dev
+    container_name: stories-migrate-dev
+    env_file:
+      - .env.development
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/app          # so Alembic sees your code/config
+      - /app/.venv
+    command: ["alembic", "upgrade", "head"]
+    restart: "no"
+    profiles: ["pipeline"]
+  pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile.pipeline.dev
+    container_name: stories-pipeline-dev
+    env_file: 
+      - .env.development
+    environment:
+      - APP_ENV: development
+    depends_on:
+      migrate:
+      condition: service_completed_successfully
+      db:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      chroma:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/.venv
+    command: ["python", "-m", "app.workers.run_pipeline", "run"]
+    profiles: ["pipeline"]
   backend:
     build:
       context: .

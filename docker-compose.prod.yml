@@ -20,6 +20,36 @@ services:
       interval: 20s
       timeout: 10s
       retries: 10
+
+  migrate:
+    image: ghcr.io/00tanveer/stories-pipeline:latest
+    container_name: stories-migrate
+    restart: "no"
+    env_file:
+      - /opt/stories/env/.env.backend
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["alembic", "upgrade", "head"]
+
+  pipeline:
+    image: ghcr.io/00tanveer/stories-pipeline:latest
+    container_name: stories-pipeline
+    restart: "no"
+    env_file:
+      - /opt/stories/env/.env.backend
+    environment:
+      APP_ENV: production
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      chroma:
+        condition: service_healthy
+    command: ["python", "-m", "app.workers.run_pipeline", "run"]
   backend:
     image: ghcr.io/00tanveer/stories-backend:latest
     container_name: stories-backend
@@ -41,16 +71,16 @@ services:
         max-size: "10m"
         max-file: "3"
     ports:
-      - "8000:8000"   # expose API if needed
+      - "8000:8000"
 
   chroma:
     image: ghcr.io/chroma-core/chroma:latest
     container_name: stories-chroma
     restart: always
     volumes:
-      - chroma_data:/data     # <-- match official instructions
+      - chroma_data:/data
     ports:
-      - "8001:8000"   # optional, useful for debugging
+      - "8001:8000"
     healthcheck:
       test: [ "CMD", "/bin/bash", "-c", "cat < /dev/null > /dev/tcp/localhost/8000" ]
       interval: 30s
