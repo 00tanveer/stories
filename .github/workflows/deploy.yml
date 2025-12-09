@@ -63,6 +63,17 @@ jobs:
           cache-from: type=registry,ref=ghcr.io/00tanveer/stories-pipeline:cache
           cache-to: type=registry,ref=ghcr.io/00tanveer/stories-pipeline:cache,mode=max
 
+      # - Sync docker-compose manifest to server
+      - name: Upload docker-compose.prod.yml
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VULTR_HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          source: "docker-compose.prod.yml"
+          target: "/opt/stories/"
+
       # - SSH into Vultr & deploy containers
       - name: Pull & restart containers on Vultr
         uses: appleboy/ssh-action@v1.0.3
