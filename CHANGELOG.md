@@ -23,7 +23,7 @@ All notable changes to Stories will be documented here. The format is based on [
 ## [0.0.4-alpha] 2025-12-10
 ### Added 
 - Created a custom DAG data flow library to orchestrate data plumbing
-- Moved artifacts to Cloudflare R2 storage
+- Added Cloudflare R2 cloud storage support for artifacts
 
 ## [0.0.3-alpha] 2025-12-07
 ### Added
