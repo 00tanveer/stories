@@ -17,7 +17,7 @@ class InferenceModel:
     def __init__(self):
         MODEL_CACHE.mkdir(parents=True, exist_ok=True)
         if not MODEL_DIR.exists():
-            storage = Storage(bucket_name=os.getenv("R2_BUCKET_NAME", "stories-prod"))
+            storage = Storage()
             archive = MODEL_CACHE / f"{MODEL_NAME}.tar.gz"
             storage.download_file(MODEL_OBJECT, str(archive))
             with tarfile.open(archive) as tf:
