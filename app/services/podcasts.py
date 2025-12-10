@@ -204,8 +204,13 @@ async def save_transcripts(files: List[Dict]):
         and their child records: words, utterances and
         chapters
     """
-    episodes = json.load(open('data/podcasts/pod_episodes_metadata.json', 'r'))
-    audio_urls = [e['enclosureUrl'] for e in episodes]
+    # Fetch episodes from database instead of local file
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(select(Episode))
+        episode_rows = result.scalars().all()
+    
+    episodes = [{"id": e.id, "enclosureUrl": e.enclosure_url} for e in episode_rows]
+    audio_urls = [e['enclosureUrl'] for e in episodes if e['enclosureUrl']]
 
     # create tasks
     tasks = [
