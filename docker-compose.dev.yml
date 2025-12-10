@@ -30,6 +30,8 @@ services:
     container_name: stories-migrate-dev
     env_file:
       - .env.development
+    environment:
+      DATABASE_URL: postgresql+asyncpg://stories_user:StoriesDB1414@db:5432/stories_db
     depends_on:
       db:
         condition: service_healthy
@@ -48,6 +50,10 @@ services:
       - .env.development
     environment:
       APP_ENV: development
+      DATABASE_URL: postgresql+asyncpg://stories_user:StoriesDB1414@db:5432/stories_db
+      ES_HOST: http://elasticsearch:9200
+      CHROMA_HOST: chroma
+      CHROMA_PORT: 8000
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -60,7 +66,8 @@ services:
     volumes:
       - .:/app
       - /app/.venv
-    command: ["python", "-m", "app.workers.run_pipeline", "run"]
+      - /opt/stories:/opt/stories
+    command: ["python", "-m", "app.workers.run_pipeline", "run", "--force"]
     profiles: ["pipeline"]
   backend:
     build:
