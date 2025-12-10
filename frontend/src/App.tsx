@@ -41,7 +41,7 @@ const App: React.FC = () => {
         body: JSON.stringify({ query }),
       });
       const data = await res.json();
-      console.log(data);
+      // console.log(data);
       // Use server-provided results directly without client-side transformation
       const serverResults: QAResult[] = Array.isArray(data)
         ? data
