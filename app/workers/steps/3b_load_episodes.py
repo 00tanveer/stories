@@ -7,9 +7,10 @@ import json
 from pathlib import Path
 
 from app.services.podcasts import save_episodes
+from app.services.storage import Storage
 from app.workers import dagmatic
 
-METADATA_PATH = Path("data/podcasts/pod_episodes_metadata.json")
+METADATA_OBJECT = "pod_episodes_metadata.json"
 
 
 def build_step() -> dagmatic.Step:
@@ -26,14 +27,23 @@ def build_step() -> dagmatic.Step:
 def _run(ctx: dagmatic.StepContext) -> dagmatic.StepResult:  # noqa: ARG001
     """Persist episode metadata into the episodes table."""
 
-    if not METADATA_PATH.exists():
-        return dagmatic.StepResult.failed(f"Missing episode metadata at {METADATA_PATH}")
+    try:
+        storage = Storage()
+    except Exception as exc:  # pragma: no cover - boto errors
+        return dagmatic.StepResult.failed(f"Storage client initialisation failed: {exc}")
+
+    metadata_bytes = storage.get_object(METADATA_OBJECT)
+    if not metadata_bytes:
+        return dagmatic.StepResult.failed(
+            f"Failed to retrieve episode metadata '{METADATA_OBJECT}' from storage"
+        )
 
     try:
-        with METADATA_PATH.open("r", encoding="utf-8") as handle:
-            episodes = json.load(handle)
-    except json.JSONDecodeError as exc:
-        return dagmatic.StepResult.failed(f"Invalid JSON in {METADATA_PATH}: {exc}")
+        episodes = json.loads(metadata_bytes.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        return dagmatic.StepResult.failed(
+            f"Invalid episode metadata payload from storage: {exc}"
+        )
 
     if not episodes:
         return dagmatic.StepResult.failed("Episode metadata list is empty")
@@ -43,7 +53,7 @@ def _run(ctx: dagmatic.StepContext) -> dagmatic.StepResult:  # noqa: ARG001
     return dagmatic.StepResult.ok(
         message=f"Loaded {len(episodes)} episodes into the database",
         details={
-            "input_path": str(METADATA_PATH),
+            "metadata_object": METADATA_OBJECT,
             "count": len(episodes),
         },
     )

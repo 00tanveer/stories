@@ -47,10 +47,10 @@ services:
     env_file: 
       - .env.development
     environment:
-      - APP_ENV: development
+      APP_ENV: development
     depends_on:
       migrate:
-      condition: service_completed_successfully
+        condition: service_completed_successfully
       db:
         condition: service_healthy
       elasticsearch:
