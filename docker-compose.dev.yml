@@ -51,6 +51,9 @@ services:
     environment:
       APP_ENV: development
       DATABASE_URL: postgresql+asyncpg://stories_user:StoriesDB1414@db:5432/stories_db
+      ES_HOST: http://elasticsearch:9200
+      CHROMA_HOST: chroma
+      CHROMA_PORT: 8000
     depends_on:
       migrate:
         condition: service_completed_successfully
