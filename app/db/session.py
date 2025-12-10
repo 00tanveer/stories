@@ -10,10 +10,10 @@ ENV = os.getenv("APP_ENV", "development")  # default to development
 if ENV == "development":
     load_dotenv(".env.development")
 db_url = os.getenv("DATABASE_URL")
-engine = create_async_engine(db_url, echo=False, future=True)
-AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
-# async def init_db():
-#     async with engine.begin() as conn:
-#         await conn.run_sync(Base.metadata.drop_all)
-#         await conn.run_sync(Base.metadata.create_all)
+
+def AsyncSessionLocal():
+    """Create a fresh engine and session each time to avoid event loop issues."""
+    engine = create_async_engine(db_url, echo=False, future=True)
+    factory = async_sessionmaker(engine, expire_on_commit=False)
+    return factory()

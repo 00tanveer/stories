@@ -22,6 +22,7 @@ class InferenceModel:
             storage.download_file(MODEL_OBJECT, str(archive))
             with tarfile.open(archive) as tf:
                 tf.extractall(MODEL_CACHE)
+        self.model_dir = MODEL_DIR
         self.tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR)
         self.model = AutoModelForSequenceClassification.from_pretrained(MODEL_DIR)
         self.pipe = pipeline("text-classification", model=self.model, tokenizer=self.tokenizer)
