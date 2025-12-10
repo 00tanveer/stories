@@ -49,6 +49,8 @@ services:
         condition: service_healthy
       chroma:
         condition: service_healthy
+    volumes:
+      - /opt/stories:/opt/stories
     command: ["python", "-m", "app.workers.run_pipeline", "run"]
   backend:
     image: ghcr.io/00tanveer/stories-backend:latest
