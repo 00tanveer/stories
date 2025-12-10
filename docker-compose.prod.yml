@@ -10,7 +10,7 @@ services:
       memlock:
         soft: -1
         hard: -1
-    mem_limit: 2g
+    mem_limit: 1g
     ports:
       - "9200:9200"
     volumes:
@@ -40,6 +40,8 @@ services:
       - /opt/stories/env/.env.backend
     environment:
       APP_ENV: production
+      CHROMA_HOST: chroma
+      CHROMA_PORT: 8000
     depends_on:
       migrate:
         condition: service_completed_successfully
