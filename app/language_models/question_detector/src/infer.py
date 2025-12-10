@@ -28,8 +28,8 @@ class InferenceModel:
 
     def predict(self, text: str):
         return self.pipe(text)
-# # Example usage
-infer_model = InferenceModel()
-print(infer_model.predict("What inspired you to start your company?"))
-print(infer_model.predict("Hogar baal"))
+# # # Example usage
+# infer_model = InferenceModel()
+# print(infer_model.predict("What inspired you to start your company?"))
+# print(infer_model.predict("Hogar baal"))
 

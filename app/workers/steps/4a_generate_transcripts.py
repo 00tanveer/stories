@@ -5,13 +5,24 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import os
+
 from app.services.storage import Storage
 from app.workers import dagmatic
 from tqdm import tqdm
 
 EPISODE_METADATA_OBJECT = "pod_episodes_metadata.json"
 TRANSCRIPTS_PREFIX = "transcripts/"
-LOCAL_TRANSCRIPTS_DIR = Path("data/transcripts")
+DEFAULT_TRANSCRIPTS_DIR = Path("data/transcripts")
+PROD_TRANSCRIPTS_DIR = Path("/opt/stories/transcripts")
+
+
+def _resolve_transcript_dir() -> Path:
+    env = os.getenv("APP_ENV", "development").lower()
+    return PROD_TRANSCRIPTS_DIR if env == "production" else DEFAULT_TRANSCRIPTS_DIR
+
+
+LOCAL_TRANSCRIPTS_DIR = _resolve_transcript_dir()
 
 
 def build_step() -> dagmatic.Step:
