@@ -4,12 +4,22 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 from pathlib import Path
 
 from app.services.podcasts import save_transcripts
 from app.workers import dagmatic
 
-TRANSCRIPTS_DIR = Path("data/transcripts")
+DEFAULT_TRANSCRIPTS_DIR = Path("data/transcripts")
+PROD_TRANSCRIPTS_DIR = Path("/opt/stories/transcripts")
+
+
+def _resolve_transcripts_dir() -> Path:
+    env = os.getenv("APP_ENV", "development").lower()
+    return PROD_TRANSCRIPTS_DIR if env == "production" else DEFAULT_TRANSCRIPTS_DIR
+
+
+TRANSCRIPTS_DIR = _resolve_transcripts_dir()
 
 
 def build_step() -> dagmatic.Step:

@@ -87,6 +87,8 @@ async def _classify_and_save() -> Dict[str, Any]:
 	total_questions = sum(len(item["host_questions"]) for item in results)
 	total_question_answers = sum(len(item["question_answers"]) for item in results)
 
+	await _persist_classifications(results)
+
 	return {
 		"episodes_processed": len(results),
 		"episodes_with_questions": episodes_with_questions,
