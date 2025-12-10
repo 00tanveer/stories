@@ -144,7 +144,7 @@ async def save_episodes(items: List[Dict]):
     - Tries to use feed_url to find podcast_id (if you prefer), otherwise maps episode's feedId/guid.
     - Uses merge() for idempotent behavior.
     """
-    semaphore = asyncio.Semaphore(100) # max 10 concurrent inserts
+    semaphore = asyncio.Semaphore(5) # max 10 concurrent inserts
     async def save_one_episode(item):
         async with semaphore:
             async with AsyncSessionLocal() as session:
