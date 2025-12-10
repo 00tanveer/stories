@@ -15,7 +15,7 @@ _STAGE_DEFS: Sequence[Tuple[str, str, Tuple[str, ...]]] = (
     ("step3a_fetch_episodes", "Step 3a • fetch episode metadata", ("step2a_fetch_podcasts",)),
         ("step3b_load_episodes", "Step 3b • load episodes table", ("step2b_load_podcasts",)),
     ("step4a_generate_transcripts", "Step 4a • generate transcripts", ("step3b_load_episodes",)),
-    ("step4b_load_transcripts", "Step 4b • load transcript tables", ()),
+    ("step4b_load_transcripts", "Step 4b • load transcript tables", ("step4a_generate_transcripts",)),
     ("step5_classify_qa", "Step 5 • classify questions & answers", ("step4b_load_transcripts",)),
     ("step6_index_chroma", "Step 6 • index Chroma collections", ("step5_classify_qa",)),
     ("step7_index_elasticsearch", "Step 7 • build Elasticsearch index", ("step4b_load_transcripts",)),

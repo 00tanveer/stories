@@ -28,7 +28,7 @@ def build_step() -> dagmatic.Step:
     return dagmatic.Step(
         name="step4b_load_transcripts",
         description="Step 4b - load transcript tables",
-        depends_on=(),
+        depends_on=("step4a_generate_transcripts",),
         run=_run,
     )
 
