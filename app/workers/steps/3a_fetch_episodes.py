@@ -5,15 +5,25 @@ from __future__ import annotations
 import csv
 import io
 import json
+import os
 from pathlib import Path
 
 from app.api.podcastindex_api import PDI_API
 from app.services.storage import Storage
 from app.workers import dagmatic
 
-OUTPUT_PATH = Path("data/podcasts/pod_episodes_metadata.json")
+DEFAULT_OUTPUT_PATH = Path("data/podcasts/pod_episodes_metadata.json")
+PROD_OUTPUT_PATH = Path("/opt/stories/pod_episodes_metadata.json")
 MANIFEST_OBJECT = "pod_urls.csv"
 METADATA_OBJECT = "pod_episodes_metadata.json"
+
+
+def _resolve_output_path() -> Path:
+	env = os.getenv("APP_ENV", "development").lower()
+	return PROD_OUTPUT_PATH if env == "production" else DEFAULT_OUTPUT_PATH
+
+
+OUTPUT_PATH = _resolve_output_path()
 
 
 def build_step() -> dagmatic.Step:
