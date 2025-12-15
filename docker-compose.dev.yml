@@ -125,16 +125,18 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev # Dev dockerfile with hot reload
+    image: stories-frontend-dev
     container_name: stories-frontend-dev
     restart: always
     env_file:
       - ./frontend/.env.development
     ports:
-      - "5173:5173"  # Vite/React dev server port
+      - "3000:3000"  # Next.js dev server port
     volumes:
       - ./frontend:/app  # Mount for hot reload
       - /app/node_modules  # Don't override node_modules
-    command: npm run dev
+    working_dir: /app
+    command: ["npx", "next", "dev", "--hostname", "0.0.0.0"]
     depends_on:
       backend:
         condition: service_healthy
