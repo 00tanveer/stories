@@ -20,6 +20,14 @@ All notable changes to Stories will be documented here. The format is based on [
 
 ### Security
 
+## [0.0.5-alpha]
+### Added 
+
+### Changed 
+- 
+
+### Fixed 
+- Player loader 
 ## [0.0.4-alpha] 2025-12-10
 ### Added 
 - Created a custom DAG data flow library to orchestrate data plumbing

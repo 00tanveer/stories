@@ -1,5 +1,6 @@
 .form {
   width: 100%;
+  max-width: 48rem;
   position: sticky;
   top: 0;
   z-index: 100;

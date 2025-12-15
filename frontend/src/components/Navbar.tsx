@@ -12,7 +12,7 @@ const Navbar: React.FC = () => {
                 alt="Stories Logo"
                 className={navStyles.logo}
             />
-            <h1>Stories</h1>
+            <h1 className={navStyles.title}>Stories</h1>
             {/* <ThemeToggle /> */}
             {/* <Button className={navStyles.howToBtn}>
                 ?

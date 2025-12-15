@@ -1,6 +1,6 @@
 .appRoot {
   min-height: 100vh;
-  /* background: var(--color-bg); */
+  background: var(--color-bg);
 }
 
 .container {
@@ -38,6 +38,7 @@
   flex-flow: wrap;
   gap: var(--space-2);
   width: 100%;
+  max-width: 48rem;
   margin-bottom: var(--space-4);
 }
 .suggestions p {

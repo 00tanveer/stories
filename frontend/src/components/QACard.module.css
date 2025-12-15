@@ -10,6 +10,9 @@
 .card:hover {
   box-shadow: var(--shadow-md);
 }
+.playing {
+  background: var(--color-tertiary);
+}
 .header {
   padding-bottom: var(--space-2);
 }
@@ -66,6 +69,7 @@
 .playBtn:hover {
   background: var(--color-text);
   color: var(--color-surface);
+  cursor: pointer;
 }
 .content {
   color: var(--color-text);

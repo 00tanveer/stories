@@ -1,15 +1,22 @@
-import { Play, Clock, Calendar } from 'lucide-react';
+"use client";
+
+import { Clock, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader } from './ui/card';
 import { Button } from './ui/button';
 import type { QAResult } from './types';
 import { useState } from 'react';
 import styles from './QACard.module.css';
 
+import Spinner from "./Spinner";
+
 interface QACardProps {
   result: QAResult;
   onPlayClick: (episode: QAResult) => void;
+  isPlaying: boolean;
+  isLoading: boolean;
+  onPlayStateChange: (playing: boolean) => void;
 }
-export default function QACard({ result, onPlayClick }: QACardProps) {
+export default function QACard({ result, onPlayClick, isPlaying, isLoading, onPlayStateChange }: QACardProps) {
     const [isExpanded, setIsExpanded] = useState(false);
     const fullAnswer = result.answer ?? '';
     const truncatedAnswer = !isExpanded && fullAnswer.length > 300
@@ -19,10 +26,15 @@ export default function QACard({ result, onPlayClick }: QACardProps) {
       ? result.utterance.slice(0, 300) + "..."
       : result.utterance;
     const handlePlay = () => {
-        onPlayClick(result);
+        if (!isPlaying) {
+          onPlayClick(result);
+          onPlayStateChange(true);
+        } else {
+          onPlayStateChange(false);
+        }
     }
     return (
-    <Card className={styles.card}>
+    <Card className={`${styles.card} ${isPlaying ? styles.playing : ''}`}>
       <CardHeader className={styles.header}>
         <div className={styles.headerRow}>
           <div style={{ flex: 1 }}>
@@ -52,13 +64,14 @@ export default function QACard({ result, onPlayClick }: QACardProps) {
               <span className={styles.author}>{result.podcast_title}</span>
               <span className={styles.metaDot}>•</span>
               <span>{result.author}</span>
-               <Button
+               <button
                 onClick={handlePlay}
-                size="icon"
                 className={styles.playBtn}
+                aria-label={isPlaying ? "Pause" : "Play"}
+                disabled={isLoading}
               >
-                <Play style={{ width: 16, height: 16 }} fill="currentColor" />
-              </Button>
+                {isLoading ? <Spinner size={20} /> : (isPlaying ? "❚❚" : "▶")}
+              </button>
             </div>
           </div>
          

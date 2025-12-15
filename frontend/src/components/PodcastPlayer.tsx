@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useRef, useState, useEffect } from "react";
 import type { QAResult } from "./types";
 import styles from "./PodcastPlayer.module.css";
@@ -9,10 +11,14 @@ export interface PodcastPlayerHandle {
   pause: () => void;
 }
 
+import Spinner from "./Spinner";
+
 interface PodcastPlayerProps {
   episode: QAResult | null;
   seekTime: { time: number; token: number } | null;
   isPlaying: boolean;
+  isLoading: boolean;
+  setIsLoading: (loading: boolean) => void;
   onPlayStateChange: (playing: boolean) => void;
   onSeekChange: (ms: number) => void;
   onEnded?: () => void;
@@ -28,6 +34,8 @@ const formatTime = (seconds: number): string => {
 const PodcastPlayer: React.FC<PodcastPlayerProps> = ({
   episode,
   isPlaying,
+  isLoading,
+  setIsLoading,
   seekTime,
   onPlayStateChange,
   onSeekChange,
@@ -57,14 +65,21 @@ const PodcastPlayer: React.FC<PodcastPlayerProps> = ({
   // Play/pause based on isPlaying prop
   useEffect(() => {
     if (!audioRef.current) return;
-
     const audio = audioRef.current;
     if (isPlaying) {
-      audio.play().catch(err => console.warn("Play failed:", err));
+      // Only set loading if audio is not already ready to play
+      if (audio.readyState < 3) {
+        setIsLoading(true);
+      } else {
+        setIsLoading(false);
+      }
+      audio.play().catch(err => {
+        setIsLoading(false);
+        console.warn("Play failed:", err);
+      });
     } else {
       audio.pause();
     }
-
   }, [isPlaying]);
 
   // Seek when seekTime changes
@@ -83,20 +98,22 @@ const PodcastPlayer: React.FC<PodcastPlayerProps> = ({
 
     const handleLoaded = () => {
       setDuration(audio.duration || episode?.duration || 0);
-
-      // 🟢 Auto-seek AFTER load (guard for null seekTime)
       if (seekTime?.time != null) {
         audio.currentTime = seekTime.time / 1000;
       }
-      // 🟢 Auto-play AFTER the new source is ready
       if (isPlaying) {
         audio.play().catch(err => console.warn("Autoplay failed:", err));
       }
-
     };
-
+    const handleCanPlay = () => {
+      setIsLoading(false);
+    };
     audio.addEventListener("loadedmetadata", handleLoaded);
-    return () => audio.removeEventListener("loadedmetadata", handleLoaded);
+    audio.addEventListener("canplay", handleCanPlay);
+    return () => {
+      audio.removeEventListener("loadedmetadata", handleLoaded);
+      audio.removeEventListener("canplay", handleCanPlay);
+    };
   }, [episode]);
 
   // Track progress + emit playing state upward
@@ -205,8 +222,10 @@ const PodcastPlayer: React.FC<PodcastPlayerProps> = ({
             <button
               onClick={togglePlay}
               className={styles.playBtn}
+              disabled={isLoading}
+              aria-label={isPlaying ? "Pause" : "Play"}
             >
-              {isPlaying ? "❚❚" : "▶"}
+              {isLoading ? <Spinner size={20} /> : (isPlaying ? "❚❚" : "▶")}
             </button>
 
             <button

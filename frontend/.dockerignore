@@ -1,5 +1,46 @@
-node_modules
-dist
-.git
-Dockerfile
-.dockerignore
+# Ignore Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+.mypy_cache/
+pytest_cache/
+
+# Virtual environments
+stories_env
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Editor / OS files
+*.log
+*.swp
+.DS_Store
+.idea/
+.vscode/
+
+# Build artifacts
+dist/
+build/
+
+# Node modules (if frontend somehow inside)
+node_modules/
+
+# Large unversioned data folders
+data/
+dumps/
+cache/
+local_storage/
+models/
+search_results/
+
+# Chroma data
+chroma/
+chroma_data/
+
+# Docker junk
+*.tar
+
