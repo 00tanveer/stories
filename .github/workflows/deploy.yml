@@ -45,7 +45,7 @@ jobs:
           platforms: linux/amd64
           tags: ghcr.io/00tanveer/stories-frontend:latest
           build-args: |
-            NEXT_API_URL=${{ secrets.NEXT_API_URL }}
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
             NEXT_PUBLIC_POSTHOG_KEY=${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
             NEXT_PUBLIC_POSTHOG_HOST=${{ secrets.NEXT_PUBLIC_POSTHOG_HOST }}
           cache-from: type=registry,ref=ghcr.io/00tanveer/stories-frontend:cache
