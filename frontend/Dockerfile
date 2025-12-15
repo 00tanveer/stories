@@ -1,3 +1,4 @@
+# ---- Build Stage ----
 FROM node:20-alpine AS build
 
 WORKDIR /app
@@ -12,16 +13,31 @@ ENV NEXT_API_URL=$NEXT_API_URL
 ENV NEXT_PUBLIC_POSTHOG_KEY=$NEXT_PUBLIC_POSTHOG_KEY
 ENV NEXT_PUBLIC_POSTHOG_HOST=$NEXT_PUBLIC_POSTHOG_HOST
 
+# Install dependencies and build
 COPY package.json package-lock.json ./
 RUN npm ci
-
 COPY . .
 RUN npm run build
 
-# ---- NGINX STAGE ----
+# ---- Production Stage ----
+FROM node:20-alpine AS runner
 
-FROM nginx:stable-alpine
-COPY --from=build /app/dist /usr/share/nginx/html
-# Copy nginx.conf from within this folder only
-RUN rm /etc/nginx/conf.d/default.conf
-COPY nginx.conf /etc/nginx/nginx.conf
+WORKDIR /app
+
+# Don't run as root
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy necessary files
+COPY --from=build /app/public ./public
+COPY --from=build /app/.next/standalone ./
+COPY --from=build /app/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT=3000
+ENV NODE_ENV=production
+
+CMD ["node", "server.js"]
