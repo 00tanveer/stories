@@ -20,14 +20,13 @@ All notable changes to Stories will be documented here. The format is based on [
 
 ### Security
 
-## [0.0.5-alpha]
-### Added 
-
+## [0.0.5-alpha] 2025-12-15
 ### Changed 
-- 
+- Migrated to Next.js from React.js/vite
 
 ### Fixed 
-- Player loader 
+- Play buttons and play button sync
+
 ## [0.0.4-alpha] 2025-12-10
 ### Added 
 - Created a custom DAG data flow library to orchestrate data plumbing
