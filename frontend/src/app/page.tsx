@@ -145,9 +145,46 @@ function HomeContent() {
   );
 }
 
+function LoadingScreen() {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        width: '100vw',
+        backgroundColor: 'var(--color-bg)',
+      }}
+    >
+      <img
+        src="/logo.png"
+        alt="Stories Logo"
+        style={{
+          width: '120px',
+          height: '120px',
+          animation: 'pulse 2s ease-in-out infinite',
+        }}
+      />
+      <style jsx>{`
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.6;
+            transform: scale(1.05);
+          }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 export default function Home() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<LoadingScreen />}>
       <HomeContent />
     </Suspense>
   );

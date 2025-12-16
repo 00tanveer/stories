@@ -1,9 +1,6 @@
 /* Design tokens (light & dark) - Single source of truth for colors, spacing, sizes, radii, etc. */
 
-/* Google Fonts - Urbanist */
-@import url('https://fonts.googleapis.com/css2?family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap');
-
-/* Custom font face */
+/* Custom font face - Sifonn Pro */
 @font-face {
   font-family: 'Sifonn Pro';
   src: url('/fonts/SIFONN_PRO.otf') format('opentype');
@@ -38,7 +35,8 @@
 
   /* Typography */
   --font-title: 'Sifonn Pro', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-  --font-sans: "Urbanist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  /* Urbanist is applied via next/font/google in layout.tsx on the body element */
+  --font-sans: inherit;
   
   /* Font weights */
   --font-light: 300;
