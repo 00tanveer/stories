@@ -32,10 +32,20 @@ class ChromaIndexer:
     EMBEDDING_MODEL = 'BAAI/bge-base-en-v1.5'
     
     def __init__(self):
-        print(os.getenv("CHROMA_HOST")) # The print output is chroma 
-        print(os.getenv("CHROMA_PORT")) # The print output is 8001
+        chroma_host = os.getenv("CHROMA_HOST")
+        chroma_port = int(os.getenv("CHROMA_PORT"))
+        print(f"🔄 Connecting to ChromaDB at {chroma_host}:{chroma_port}...")
 
-        self.chroma_client = chromadb.HttpClient(host=os.getenv("CHROMA_HOST"), port=os.getenv("CHROMA_PORT"))
+        try:
+            self.chroma_client = chromadb.HttpClient(host=chroma_host, port=chroma_port)
+            # Test the connection
+            print(f"🔄 Testing ChromaDB connection...")
+            self.chroma_client.heartbeat()
+            print(f"✅ ChromaDB connection successful!")
+        except Exception as e:
+            print(f"❌ Failed to connect to ChromaDB: {e}")
+            print(f"Make sure ChromaDB is running: docker compose -f docker-compose.dev.yml up -d chroma")
+            raise
         self.embeddings_generator = infinity_embeddings(self.EMBEDDING_MODEL)
         self.chroma_coll_config = {
             "hnsw": {

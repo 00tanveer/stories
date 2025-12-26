@@ -32,7 +32,7 @@ def build_step() -> dagmatic.Step:
 	return dagmatic.Step(
 		name="step3a_fetch_episodes",
 		description="Step 3a - fetch episode metadata",
-		depends_on=("step2a_fetch_podcasts",),
+		depends_on=("step1_seed_podcast_list",),
 		run=_run,
 	)
 
@@ -67,10 +67,10 @@ def _run(ctx: dagmatic.StepContext) -> dagmatic.StepResult:  # noqa: ARG001
 		if not row:
 			continue
 		raw_feed = row[2] if len(row) > 2 else ""
-		feed_url = raw_feed.strip().strip('"').strip("'").rstrip(",")
-		if not feed_url:
+		feed_id = raw_feed.strip().strip('"').strip("'").rstrip(",")
+		if not feed_id:
 			continue
-		response = pdi_api.getEpisodesByFeedURL(feed_url)
+		response = pdi_api.getEpisodesByFeedId(feed_id)
 		if response.get("status_code") == 200 and response.get("success"):
 			data = response.get("data") or {}
 			items = data.get("items") if isinstance(data, dict) else None
@@ -79,20 +79,20 @@ def _run(ctx: dagmatic.StepContext) -> dagmatic.StepResult:  # noqa: ARG001
 			else:
 				failures.append(
 					{
-						"feed_url": feed_url,
+						"feed_id": feed_id,
 						"reason": "Empty items payload",
 					}
 				)
 		else:
 			failures.append(
 				{
-					"feed_url": feed_url,
+					"feed_id": feed_id,
 					"status_code": response.get("status_code"),
 					"error": response.get("error") or response,
 				}
 			)
 			print(
-				f"Warning: failed to fetch episodes for {feed_url}: {response.get('error') or response}"
+				f"Warning: failed to fetch episodes for {feed_id}: {response.get('error') or response}"
 			)
 
 	OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)

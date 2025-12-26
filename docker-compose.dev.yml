@@ -79,6 +79,7 @@ services:
       - .env.development
     environment:
       APP_ENV: development
+      DATABASE_URL: postgresql+asyncpg://stories_user:StoriesDB1414@db:5432/stories_db
       CHROMA_HOST: chroma
       CHROMA_PORT: 8000
       ES_HOST: http://elasticsearch:9200
@@ -145,13 +146,13 @@ services:
     container_name: postgres-dev
     restart: always
     env_file:
-      - .env.development  # <-- dynamic! This changes between dev vs prod
+      - .env.development
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U stories_user -d stories_db"]
       interval: 5s
       retries: 5
 volumes:

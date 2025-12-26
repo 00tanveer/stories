@@ -32,10 +32,25 @@ class Retriever:
     """
     EMBEDDING_MODEL = 'BAAI/bge-base-en-v1.5'
     def __init__(self):
-        self.query_emb_model = FlagModel(self.EMBEDDING_MODEL, devices='cpu')
+        print("🔄 Loading FlagModel embedding model...")
+        self.query_emb_model = FlagModel(
+            self.EMBEDDING_MODEL, 
+            query_instruction_for_retrieval="Represent this sentence for searching relevant passages:",
+            use_fp16=False
+        )
+        print("✅ FlagModel loaded!")
+        
+        print("🔄 Initializing ChromaDB client...")
         self.chroma_client = ChromaIndexer()
+        print("✅ ChromaDB client initialized!")
+        
+        print("🔄 Getting QA collection...")
         self.qa_collection = self.chroma_client.get_collection(name="episode_qa_pairs")
+        print("✅ QA collection loaded!")
+        
+        print("🔄 Getting utterances collection...")
         self.utterances_collection = self.chroma_client.get_collection(name="utterances")
+        print("✅ Utterances collection loaded!")
     def chroma_search(self, query_text, top_k=10, threshold=None):
         """
         Search top-k similar questions from both QA and utterances collections.

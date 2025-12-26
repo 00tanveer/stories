@@ -17,6 +17,11 @@ class Podcast(Base):
     cover_image: Mapped[str]
     language: Mapped[str]  # Could use Enum(LanguageEnum)
     episode_count: Mapped[int]
+    itunes_rating: Mapped[float | None]
+    itunes_number_of_ratings: Mapped[int | None]
+    popularity_score: Mapped[float] # e.g. from Podcast Index
+    category_1: Mapped[str]
+    category_2: Mapped[str | None]
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), onupdate=func.now())
 
     episodes: Mapped[list["Episode"]] = relationship(

@@ -10,10 +10,9 @@ from app.workers import dagmatic
 
 _STAGE_DEFS: Sequence[Tuple[str, str, Tuple[str, ...]]] = (
     ("step1_seed_podcast_list", "Step 1 • curate podcast list", ()),
-    ("step2a_fetch_podcasts", "Step 2a • fetch podcast metadata", ("step1_seed_podcast_list",)),
-    ("step2b_load_podcasts", "Step 2b • load podcasts table", ("step2a_fetch_podcasts",)),
-    ("step3a_fetch_episodes", "Step 3a • fetch episode metadata", ("step2a_fetch_podcasts",)),
-        ("step3b_load_episodes", "Step 3b • load episodes table", ("step2b_load_podcasts",)),
+    ("step2_load_podcasts", "Step 2 • load podcasts table", ("step1_seed_podcast_list",)),
+    ("step3a_fetch_episodes", "Step 3a • fetch episode metadata", ("step1_seed_podcast_list",)),
+    ("step3b_load_episodes", "Step 3b • load episodes table", ("step2_load_podcasts",)),
     ("step4a_generate_transcripts", "Step 4a • generate transcripts", ("step3b_load_episodes",)),
     ("step4b_load_transcripts", "Step 4b • load transcript tables", ("step4a_generate_transcripts",)),
     ("step5_classify_qa", "Step 5 • classify questions & answers", ("step4b_load_transcripts",)),
@@ -29,8 +28,7 @@ def _placeholder(title: str):
 
 _CUSTOM_STEP_MODULES = {
     "step1_seed_podcast_list": "app.workers.steps.01_seed_podcast_list",
-    "step2a_fetch_podcasts": "app.workers.steps.2a_fetch_podcasts",
-    "step2b_load_podcasts": "app.workers.steps.2b_load_podcasts",
+    "step2_load_podcasts": "app.workers.steps.02_load_podcasts",
     "step3a_fetch_episodes": "app.workers.steps.3a_fetch_episodes",
     "step3b_load_episodes": "app.workers.steps.3b_load_episodes",
     "step4a_generate_transcripts": "app.workers.steps.4a_generate_transcripts",

@@ -8,6 +8,14 @@ from dotenv import load_dotenv
 import os
 import json
 import functools
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 def get_version():
     with open("version.json") as f:
@@ -29,18 +37,25 @@ def api_handler(max_retries=3, backoff_factor=1.5):
             while retries <= max_retries:
                 try:
                     req = func(self, *args, **kwargs)
+                    logger.info(f"🌐 Request: {req['url']}")
+                    logger.debug(f"Headers: {req['headers']}")
+                    
                     res = requests.post(req["url"], headers=req["headers"])
+                    logger.info(f"📡 Response: {res.status_code}")
 
                     # ✅ If successful, return parsed JSON
                     if res.status_code == 200:
                         try:
                             data = res.json()
+                            logger.info(f"✅ Success: Received {len(str(data))} bytes of data")
+                            logger.debug(f"Response data: {json.dumps(data, indent=2)[:500]}...")
                             return {
                                 "success": True,
                                 "status_code": 200,
                                 "data": data
                             }
                         except json.JSONDecodeError:
+                            logger.error(f"❌ Invalid JSON response: {res.text[:200]}")
                             return {
                                 "success": False,
                                 "status_code": 200,
@@ -54,11 +69,11 @@ def api_handler(max_retries=3, backoff_factor=1.5):
 
                         if retry_after:
                             wait_time = int(retry_after)
-                            print(f"⏳ Rate limit hit. Retrying after {wait_time}s...")
+                            logger.warning(f"⏳ Rate limit hit. Retrying after {wait_time}s...")
                         else:
                             # fallback exponential backoff
                             wait_time = backoff_factor ** retries
-                            print(f"⚠️ Rate limit (no Retry-After). Waiting {wait_time:.1f}s...")
+                            logger.warning(f"⚠️ Rate limit (no Retry-After). Waiting {wait_time:.1f}s...")
 
                         time.sleep(wait_time)
                         retries += 1
@@ -66,6 +81,7 @@ def api_handler(max_retries=3, backoff_factor=1.5):
 
                     # ❌ Other errors
                     else:
+                        logger.error(f"❌ API Error {res.status_code}: {res.text[:200]}")
                         return {
                             "success": False,
                             "status_code": res.status_code,
@@ -76,12 +92,13 @@ def api_handler(max_retries=3, backoff_factor=1.5):
                 except requests.exceptions.RequestException as e:
                     # network-level issue
                     wait_time = backoff_factor ** retries
-                    print(f"⚠️ Network error: {str(e)}. Retrying in {wait_time:.1f}s...")
+                    logger.warning(f"⚠️ Network error: {str(e)}. Retrying in {wait_time:.1f}s...")
                     time.sleep(wait_time)
                     retries += 1
                     continue
 
             # after all retries failed
+            logger.error(f"❌ Max retries ({max_retries}) reached. Request failed.")
             return {
                 "success": False,
                 "status_code": None,
@@ -100,6 +117,12 @@ class PDI_API:
         self.api_key = os.getenv('PODCASTINDEX_APIKEY')
         self.api_secret = os.getenv('PODCASTINDEX_SECRET')
         self.base_url = "https://api.podcastindex.org/api/1.0/"
+        
+        # Log initialization
+        if self.api_key and self.api_secret:
+            logger.info(f"🔑 PDI_API initialized with credentials (key: {self.api_key[:8]}...)")
+        else:
+            logger.warning("⚠️ PDI_API initialized WITHOUT valid credentials!")
     def build_request(self, query):
         # we'll need the unix time
         epoch_time = int(time.time())
@@ -127,6 +150,17 @@ class PDI_API:
         return self.build_request(query)
 
     @api_handler()
+    def getPodcastByFeedId(self, feed_id):
+        query = f"/podcasts/byfeedid?id={feed_id}"
+        return self.build_request(query)
+    @api_handler()
     def getEpisodesByFeedURL(self, feed_url):
         query = f"/episodes/byfeedurl?url={feed_url}"
         return self.build_request(query)
+    
+    @api_handler()
+    def getEpisodesByFeedId(self, feed_id):
+        query = f"/episodes/byfeedid?id={feed_id}"
+        return self.build_request(query)
+    
+

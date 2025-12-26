@@ -6,6 +6,8 @@ import asyncio
 import json
 from pathlib import Path
 
+from tqdm import tqdm
+
 from app.services.podcasts import save_episodes
 from app.services.storage import Storage
 from app.workers import dagmatic
@@ -19,7 +21,7 @@ def build_step() -> dagmatic.Step:
     return dagmatic.Step(
         name="step3b_load_episodes",
         description="Step 3b - load episode metadata into Postgres",
-        depends_on=("step2b_load_podcasts",),
+        depends_on=("step2_load_podcasts",),
         run=_run,
     )
 
@@ -48,12 +50,23 @@ def _run(ctx: dagmatic.StepContext) -> dagmatic.StepResult:  # noqa: ARG001
     if not episodes:
         return dagmatic.StepResult.failed("Episode metadata list is empty")
 
-    asyncio.run(save_episodes(episodes))
+    succeeded, failures = asyncio.run(save_episodes(episodes))
+
+    if failures:
+        # Surface the failed episode IDs without leaking full payloads.
+        # Show first failure with full error details
+        first_error = failures[0]["error"] if failures else "Unknown"
+        failure_ids = ", ".join([str(f["episode_id"]) for f in failures[:3]])
+        if len(failures) > 3:
+            failure_ids += f" (and {len(failures) - 3} more)"
+        return dagmatic.StepResult.failed(
+            message=f"Failed to persist {len(failures)} episodes. First error: {first_error}. Failed IDs: {failure_ids}"
+        )
 
     return dagmatic.StepResult.ok(
-        message=f"Loaded {len(episodes)} episodes into the database",
+        message=f"Loaded {succeeded} episodes into the database",
         details={
             "metadata_object": METADATA_OBJECT,
-            "count": len(episodes),
+            "count": succeeded,
         },
     )
