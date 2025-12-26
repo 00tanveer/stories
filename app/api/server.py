@@ -1,11 +1,14 @@
 from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 from app.services.retrieval import Retriever
+from app.services.podcasts import get_podcasts_by_category, get_podcast_by_id
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 from posthog import Posthog, new_context, identify_context, set_context_session
 import time
 import logging
+import json
+from pathlib import Path
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -14,8 +17,6 @@ posthog = Posthog(
   host='https://us.i.posthog.com',
   enable_exception_autocapture=True
 )
-
-
 
 app = FastAPI(title="Stories Search API", version="1.0")
 
@@ -66,10 +67,18 @@ async def posthog_middleware(request: Request, call_next):
                 }
             )
             raise
-# ---- Initialize the Retriever (singleton)
+# ---- Initialize the Retriever (lazy-loaded singleton)
 
-retriever = Retriever()
-# Try loading an existing index; fallback to rebuild
+retriever = None
+
+def get_retriever():
+    """Lazy load the retriever only when needed."""
+    global retriever
+    if retriever is None:
+        logger.info("🔄 Initializing Retriever for the first time (this may take 30-60 seconds)...")
+        retriever = Retriever()
+        logger.info("✅ Retriever initialized successfully!")
+    return retriever
 
 
 # ---- Request/Response Models ----
@@ -96,6 +105,57 @@ def root():
 def health():
     return {"status": "ok"}
 
+@app.get("/pods/{genre}")
+async def get_podcasts_by_genre(genre: str, page: int = 1, page_size: int = 20):
+    """Get podcasts by genre with pagination from PostgreSQL."""
+    try:
+        result = await get_podcasts_by_category(genre, page, page_size)
+        
+        return {
+            "genre": genre,
+            "page": result["page"],
+            "page_size": result["page_size"],
+            "total": result["total"],
+            "total_pages": result["total_pages"],
+            "podcasts": result["podcasts"]
+        }
+    except Exception as e:
+        logger.error(f"Error fetching podcasts for genre {genre}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/pods/{genre}/{feed_id}")
+async def get_podcast_by_id_route(genre: str, feed_id: str):
+    """Get a single podcast by genre and feedId from PostgreSQL."""
+    try:
+        podcast = await get_podcast_by_id(feed_id)
+        
+        if not podcast:
+            raise HTTPException(status_code=404, detail=f"Podcast with feedId '{feed_id}' not found")
+        
+        return podcast
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching podcast {feed_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/episodes/{feed_id}")
+async def get_episodes(feed_id: str, limit: int = 50, offset: int = 0):
+    """Get episodes for a specific podcast feed ID."""
+    try:
+        from app.services.episodes import get_episodes_by_podcast_id
+        
+        episodes = await get_episodes_by_podcast_id(feed_id, limit=limit, offset=offset)
+        
+        return {
+            "feed_id": feed_id,
+            "total": len(episodes),
+            "episodes": episodes
+        }
+    except Exception as e:
+        logger.error(f"Error fetching episodes for podcast {feed_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/search")
 def search(request: QueryRequest, req: Request):
     """Perform a semantic search against indexed questions."""
@@ -109,7 +169,7 @@ def search(request: QueryRequest, req: Request):
         request.user_agent = req.headers.get("User-Agent")
         request.timestamp_ms = int(time.time() * 1000)
 
-        results = retriever.hybrid_search(request.query, top_k=request.top_k)
+        results = get_retriever().hybrid_search(request.query, top_k=request.top_k)
         return {
             "query": request.query,
             "context": {

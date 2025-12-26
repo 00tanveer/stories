@@ -20,6 +20,11 @@ All notable changes to Stories will be documented here. The format is based on [
 
 ### Security
 
+## [0.0.6-alpha] 2025
+### Added
+- Automated pipeline step for curation of top 1000 technology podcasts
+- Browse podcasts from Explore Page
+
 ## [0.0.5-alpha] 2025-12-15
 ### Changed 
 - Migrated to Next.js from React.js/vite

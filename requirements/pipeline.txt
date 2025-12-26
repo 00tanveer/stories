@@ -1,3 +1,4 @@
 torch==2.3.1+cpu
 --extra-index-url https://download.pytorch.org/whl/cpu
 transformers
+beautifulsoup4

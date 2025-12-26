@@ -22,7 +22,7 @@ from app.db.data_models.transcript_utterance import TranscriptUtterance
 from app.db.data_models.transcript_word import TranscriptWord
 
 # sqlalchemy 
-from sqlalchemy import select, func, and_, text
+from sqlalchemy import select, func, and_, text, or_
 from sqlalchemy.orm import selectinload
 
 
@@ -45,7 +45,14 @@ def __map_feed_to_podcast(feed_data: Dict) -> Podcast:
         author=feed_data.get('author', ''),
         website=feed_data.get('originalUrl', ''),
         language=feed_data.get('language', ''),
-        episode_count=feed_data.get('episodeCount', 0)
+        episode_count=feed_data.get('episodeCount', 0),
+        itunes_rating=feed_data.get('rating'),
+        itunes_number_of_ratings=feed_data.get('numberOfRatings'),
+        # Ensure popularity_score is never null - use default if not provided
+        popularity_score=feed_data.get('popularityScore') or feed_data.get('popularity_score') or 0.0,
+        # Ensure category_1 is never null - use default if not provided  
+        category_1=feed_data.get('category1') or feed_data.get('category_1') or 'technology',
+        category_2=feed_data.get('category2') or feed_data.get('category_2')
     )
     return podcast
 
@@ -144,16 +151,26 @@ async def save_episodes(items: List[Dict]):
     - Tries to use feed_url to find podcast_id (if you prefer), otherwise maps episode's feedId/guid.
     - Uses merge() for idempotent behavior.
     """
-    semaphore = asyncio.Semaphore(5) # max 10 concurrent inserts
-    async def save_one_episode(item):
-        async with semaphore:
+    from tqdm import tqdm
+    
+    succeeded = 0
+    failures = []
+    
+    for item in tqdm(items, desc="Saving episodes", unit="episode"):
+        try:
             async with AsyncSessionLocal() as session:
                 async with session.begin():
                     episode_obj = __map_item_to_episode(item)
                     await session.merge(episode_obj)
-            return True
-    await asyncio.gather(*(save_one_episode(item) for item in items))
-    return True
+            succeeded += 1
+        except Exception as exc:
+            failures.append({
+                "episode_id": item.get("id"),
+                "title": item.get("title"),
+                "error": repr(exc)
+            })
+    
+    return succeeded, failures
 
 semaphore = asyncio.Semaphore(5)
 async def save_one_transcript(t_dict: Dict, episodes: list, audio_urls: list):
@@ -448,5 +465,125 @@ async def update_confidence_from_json():
 
         await session.commit()
         print("🎉 All confidence values restored successfully!")
+
+async def delete_podcast_by_id(podcast_id: str):
+    """
+    Delete a podcast by its id.
+    Returns True if deleted, False if not found.
+    """
+    async with AsyncSessionLocal() as session:
+        async with session.begin():
+            # Find the podcast
+            stmt = select(Podcast).where(Podcast.id == podcast_id)
+            result = await session.execute(stmt)
+            podcast = result.scalar_one_or_none()
+            
+            if not podcast:
+                print(f"⚠️ Podcast with id {podcast_id} not found")
+                return False
+            
+            # Delete the podcast (cascade should handle related episodes)
+            await session.delete(podcast)
+            print(f"✅ Deleted podcast: {podcast.title} (id: {podcast_id})")
+            return True
+
+
+async def get_podcasts_by_category(category: str, page: int = 1, page_size: int = 20):
+    """
+    Retrieve podcasts by category with pagination.
+    Filters by category_1 or category_2 fields.
+    """
+    async with AsyncSessionLocal() as session:
+        # Calculate offset for pagination
+        offset = (page - 1) * page_size
+        
+        # Create filter condition for category (check both category_1 and category_2)
+        category_filter = or_(
+            Podcast.category_1 == category,
+            Podcast.category_2 == category
+        )
+        
+        # Get total count for this category
+        count_stmt = select(func.count(Podcast.id)).where(category_filter)
+        total_result = await session.execute(count_stmt)
+        total = total_result.scalar()
+        
+        # Get paginated podcasts for this category
+        stmt = (
+            select(Podcast)
+            .where(category_filter)
+            .order_by(Podcast.popularity_score.desc(), Podcast.title)
+            .offset(offset)
+            .limit(page_size)
+        )
+        result = await session.execute(stmt)
+        podcasts = result.scalars().all()
+        
+        # Convert to dict format
+        podcast_list = []
+        for podcast in podcasts:
+            podcast_dict = {
+                "id": podcast.id,
+                "title": podcast.title,
+                "url": podcast.url,
+                "originalUrl": podcast.original_url,
+                "description": podcast.description,
+                "author": podcast.author,
+                "website": podcast.website,
+                "image": podcast.cover_image,
+                "language": podcast.language,
+                "episodeCount": podcast.episode_count,
+                "itunesRating": podcast.itunes_rating,
+                "itunesNumberOfRatings": podcast.itunes_number_of_ratings,
+                "popularityScore": podcast.popularity_score,
+                "category1": podcast.category_1,
+                "category2": podcast.category_2,
+                "updatedAt": podcast.updated_at.isoformat() if podcast.updated_at else None
+            }
+            podcast_list.append(podcast_dict)
+        
+        return {
+            "podcasts": podcast_list,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": (total + page_size - 1) // page_size if total > 0 else 0
+        }
+
+
+async def get_podcast_by_id(podcast_id: str):
+    """
+    Retrieve a single podcast by its ID.
+    Returns the podcast data or None if not found.
+    """
+    async with AsyncSessionLocal() as session:
+        stmt = select(Podcast).where(Podcast.id == podcast_id)
+        result = await session.execute(stmt)
+        podcast = result.scalar_one_or_none()
+        
+        if not podcast:
+            return None
+            
+        # Convert to dict format
+        podcast_dict = {
+            "id": podcast.id,
+            "title": podcast.title,
+            "url": podcast.url,
+            "originalUrl": podcast.original_url,
+            "description": podcast.description,
+            "author": podcast.author,
+            "website": podcast.website,
+            "image": podcast.cover_image,
+            "language": podcast.language,
+            "episodeCount": podcast.episode_count,
+            "itunesRating": podcast.itunes_rating,
+            "itunesNumberOfRatings": podcast.itunes_number_of_ratings,
+            "popularityScore": podcast.popularity_score,
+            "category1": podcast.category_1,
+            "category2": podcast.category_2,
+            "updatedAt": podcast.updated_at.isoformat() if podcast.updated_at else None
+        }
+        
+        return podcast_dict
 
             

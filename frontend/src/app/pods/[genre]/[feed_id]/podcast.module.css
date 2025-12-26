@@ -1,0 +1,389 @@
+/* Podcast Detail Page Styles */
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
+.breadcrumb a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.breadcrumb a:hover {
+  opacity: 0.8;
+}
+
+.separator {
+  color: var(--color-muted);
+}
+
+/* Podcast Header */
+.podcastHeader {
+  display: flex;
+  gap: 3rem;
+  margin-bottom: 3rem;
+  padding-bottom: 3rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.podcastImageLarge {
+  flex-shrink: 0;
+  width: 300px;
+  height: 300px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.podcastImageLarge img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.podcastImagePlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 6rem;
+  background: linear-gradient(135deg, var(--color-tertiary), var(--color-border));
+}
+
+.podcastInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.podcastTitle {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.podcastAuthor {
+  font-size: 1.25rem;
+  color: var(--color-muted);
+  margin: 0;
+}
+
+/* Rating Section */
+.ratingSection {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.ratingStars {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.starFilled {
+  color: #FFB800;
+  font-size: 1.25rem;
+}
+
+.starEmpty {
+  color: var(--color-border);
+  font-size: 1.25rem;
+}
+
+.ratingText {
+  font-size: 1rem;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.noRating {
+  color: var(--color-muted);
+  font-size: 1rem;
+}
+
+/* Categories */
+.categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.categoryTag {
+  padding: 0.5rem 1rem;
+  background: var(--color-tertiary);
+  color: var(--color-text);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+/* Action Buttons */
+.actionButtons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.primaryButton {
+  padding: 0.875rem 2rem;
+  background: var(--color-primary);
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.primaryButton:hover {
+  opacity: 0.9;
+}
+
+.secondaryButton {
+  padding: 0.875rem 2rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 2px solid var(--color-border);
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.secondaryButton:hover {
+  background: var(--color-tertiary);
+}
+
+/* Description Section */
+.descriptionSection {
+  margin-bottom: 3rem;
+}
+
+.descriptionSection h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--color-text);
+}
+
+.description {
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: var(--color-muted);
+  white-space: pre-line;
+}
+
+/* Stats Grid */
+.statsGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 3rem;
+  max-height: 100px;
+  overflow: visible;
+}
+
+.statCard {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  transition: transform 0.2s, box-shadow 0.2s;
+  flex: 0 1 auto;
+}
+
+.statCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.statIcon {
+  font-size: 1.5rem;
+}
+
+.statContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.statValue {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* Episodes Section */
+.episodesSection {
+  margin-top: 3rem;
+  padding-top: 3rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.episodesSection h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--color-text);
+}
+
+.loadingText, .noEpisodes {
+  font-size: 1.125rem;
+  color: var(--color-muted);
+  padding: 2rem;
+  text-align: center;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+}
+
+.episodesList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.episodeCard {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.episodeCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.episodeImage {
+  flex-shrink: 0;
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.episodeImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.episodeImagePlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  font-size: 3rem;
+}
+
+.episodeContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.episodeTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.episodeMeta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
+.episodeDate, .episodeDuration {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.episodeDescription {
+  font-size: 0.9375rem;
+  color: var(--color-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.episodeActions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.playButton, .linkButton {
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+}
+
+/* Error Message */
+.errorMessage {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.errorMessage h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  color: var(--color-text);
+}
+
+.errorMessage p {
+  color: var(--color-muted);
+  margin-bottom: 2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .podcastHeader {
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .podcastImageLarge {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+
+  .podcastTitle {
+    font-size: 2rem;
+  }
+
+  .actionButtons {
+    flex-direction: column;
+  }
+
+  .actionButtons button {
+    width: 100%;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+}
